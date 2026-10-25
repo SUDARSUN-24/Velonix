@@ -3,7 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('velonix-theme');
+        if (savedTheme !== 'light' && savedTheme !== 'dark') {
+          var cookieMatch = document.cookie.match(/(?:^|;\s*)velonix-theme=(light|dark)/);
+          savedTheme = cookieMatch ? cookieMatch[1] : null;
+        }
+        if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
+      } catch (error) {}
+    }());
+  </script>
   <title>Velonix Garage | The Showroom</title>
+  <meta name="description" content="Browse Velonix base chassis and signature builds, then enter the hologram lab to shape your next machine.">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" type="image/png">
   
   <!-- LIBRARIES -->
@@ -120,55 +133,193 @@
     .sig-price { color: #ffd700; font-family: 'Orbitron'; font-size: 1.2rem; display: block; margin-top: 10px; text-align: right; }
 
   </style>
+  <style>
+    :root {
+      --cyan: #5ff7ff;
+      --gold: #f7c95c;
+      --ink: #070812;
+      --muted: #a9abc5;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background:
+        radial-gradient(circle at 12% 12%, rgba(188,19,254,.15), transparent 30rem),
+        radial-gradient(circle at 88% 65%, rgba(95,247,255,.07), transparent 26rem),
+        var(--ink);
+      line-height: 1.5;
+    }
+    body::after {
+      content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .2;
+      background-image: radial-gradient(rgba(95,247,255,.5) 1px, transparent 1px);
+      background-size: 44px 44px; animation: drift 26s linear infinite;
+    }
+    @keyframes drift { to { background-position: 44px 88px; } }
+    header { padding: 18px clamp(20px, 6vw, 88px); background: rgba(5,5,15,.78); backdrop-filter: blur(16px); border-bottom-color: rgba(95,247,255,.35); }
+    header h1 { font-size: clamp(1.05rem, 2vw, 1.45rem); }
+    .back-btn { border-color: rgba(95,247,255,.35); border-radius: 999px; padding: 10px 17px; }
+    .back-btn:focus-visible, .swiper-slide:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+    section { padding: clamp(72px, 9vw, 120px) 6%; border-bottom-color: rgba(255,255,255,.08); }
+    section:nth-of-type(2) { background: rgba(3,4,12,.72) !important; }
+    section h2 { font-size: clamp(1.7rem, 4vw, 3rem); }
+    .section-desc { color: var(--muted); max-width: 680px; line-height: 1.7; }
+    .showroom-meta { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 28px; margin: -25px auto 40px; color: var(--cyan); font: 600 .72rem Orbitron, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    .showroom-meta span::before { content: "◆"; color: var(--gold); margin-right: 8px; font-size: .55rem; }
+    .swiper { max-width: 1240px; margin: 0 auto; padding: 10px 6px 55px; }
+    .swiper-slide {
+      background: rgba(15,16,31,.78); border-color: rgba(188,19,254,.25);
+      box-shadow: 0 12px 30px rgba(0,0,0,.2); transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+    }
+    .swiper-slide:hover { border-color: var(--cyan); box-shadow: 0 18px 45px rgba(95,247,255,.15); }
+    .swiper-slide img { filter: saturate(.82) contrast(1.08); transition: transform .55s ease, filter .55s ease; }
+    .swiper-slide:hover img { transform: scale(1.05); filter: saturate(1.15) contrast(1.1); }
+    .swiper-slide h4 { padding: 0 14px; }
+    .swiper-pagination-bullet-active { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+    .signature-grid { max-width: 1240px; margin: 0 auto; gap: 24px; }
+    .sig-card { background: rgba(15,16,31,.8); border-color: rgba(188,19,254,.25); box-shadow: 0 12px 30px rgba(0,0,0,.2); }
+    .sig-card:hover { border-color: var(--gold); box-shadow: 0 18px 45px rgba(247,201,92,.16); }
+    .sig-img-box { height: 230px; overflow: hidden; }
+    .sig-img-box img { transition: transform .6s ease; filter: saturate(.8) contrast(1.08); }
+    .sig-card:hover .sig-img-box img { transform: scale(1.06); }
+    .sig-badge { background: var(--gold); }
+    .sig-content p { color: var(--muted); }
+    .sig-price { color: var(--gold); }
+    @media (max-width: 640px) {
+      header { gap: 12px; }
+      .sig-content { padding: 21px; }
+      .sig-specs { flex-wrap: wrap; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+  <style>
+    /* Shared theme system and motion polish */
+    :root {
+      --theme-bg: #070812; --theme-text: #f4f3ff; --theme-muted: #a9abc5;
+      --theme-panel: rgba(15, 16, 31, .8); --theme-header: rgba(5, 5, 15, .82);
+      --theme-section: rgba(3, 4, 12, .72); --theme-border: rgba(95, 247, 255, .24); --theme-shadow: rgba(0, 0, 0, .35);
+    }
+    html[data-theme="light"] {
+      --theme-bg: #f3f5ff; --theme-text: #17142d; --theme-muted: #4e5874;
+      --theme-panel: rgba(255, 255, 255, .84); --theme-header: rgba(248, 249, 255, .88);
+      --theme-section: rgba(232, 237, 252, .84); --theme-border: rgba(87, 44, 166, .24); --theme-shadow: rgba(35, 24, 83, .16);
+    }
+    body { color: var(--theme-text); transition: background-color .45s ease, color .45s ease; }
+    header { flex-wrap: wrap; background: var(--theme-header); border-bottom-color: var(--theme-border); box-shadow: 0 4px 30px var(--theme-shadow); animation: headerEnter .8s cubic-bezier(.2,.8,.2,1) both; transition: background .45s ease, border-color .45s ease, box-shadow .45s ease; }
+    header h1 { text-shadow: 0 0 15px var(--neon-glow); }
+    .theme-toggle { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--cyan); border-radius: 999px; padding: 8px 13px; color: var(--theme-text); background: rgba(95,247,255,.08); font: 600 .72rem Orbitron, sans-serif; letter-spacing: .08em; cursor: pointer; transition: transform .25s ease, background .25s ease, color .25s ease, box-shadow .25s ease; }
+    .theme-toggle:hover { transform: translateY(-2px); color: #071018; background: var(--cyan); box-shadow: 0 0 18px rgba(95,247,255,.35); }
+    .theme-toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .theme-icon { font-size: 1rem; line-height: 1; }
+    section { transition: background-color .45s ease, color .45s ease; animation: sectionEnter .8s cubic-bezier(.2,.8,.2,1) both; }
+    .swiper-slide, .sig-card { background: var(--theme-panel); border-color: var(--theme-border); box-shadow: 0 12px 30px var(--theme-shadow); }
+    .swiper-slide h4, .sig-content h3 { color: var(--theme-text); }
+    .section-desc, .sig-content p, .spec { color: var(--theme-muted); }
+    .sig-specs { border-top-color: var(--theme-border); }
+    .back-btn { position: relative; overflow: hidden; isolation: isolate; }
+    .back-btn::after { content: ""; position: absolute; inset: 0 auto 0 -130%; width: 55%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: buttonShimmer 4.8s ease-in-out infinite; pointer-events: none; }
+    @keyframes headerEnter { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes sectionEnter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes buttonShimmer { 0%, 55% { left: -130%; } 75%, 100% { left: 140%; } }
+    html[data-theme="light"] body { background: radial-gradient(circle at 12% 12%, rgba(188,19,254,.11), transparent 30rem), radial-gradient(circle at 88% 65%, rgba(0, 190, 210, .11), transparent 26rem), var(--theme-bg); }
+    html[data-theme="light"] section:nth-of-type(2) { background: var(--theme-section) !important; }
+    html[data-theme="light"] .swiper-slide, html[data-theme="light"] .sig-card { color: var(--theme-text); }
+    html[data-theme="light"] .sig-badge { color: #201634; }
+    @media (prefers-reduced-motion: reduce) { section, header, .back-btn::after { animation: none !important; } }
+    html[data-theme="light"] .back-btn { color: #28144f; border-color: rgba(87,44,166,.28); }
+    html[data-theme="light"] body { color: var(--theme-text); }
+    html[data-theme="light"] section { background: var(--theme-bg); color: var(--theme-text); }
+    html[data-theme="light"] section[style] { background: var(--theme-section) !important; }
+    html[data-theme="light"] section h2 { color: #5d2bb8; }
+    html[data-theme="light"] .section-desc { color: var(--theme-muted); }
+    html[data-theme="light"] .swiper-slide,
+    html[data-theme="light"] .sig-card { background: var(--theme-panel); color: var(--theme-text); }
+    html[data-theme="light"] .swiper-slide h4,
+    html[data-theme="light"] .sig-content h3 { color: var(--theme-text); }
+    html[data-theme="light"] .sig-content p,
+    html[data-theme="light"] .spec { color: var(--theme-muted); }
+    .theme-toggle { position: relative; overflow: hidden; }
+    .theme-toggle::after { content: ""; position: absolute; inset: 0 auto 0 -90%; width: 45%; transform: skewX(-22deg); background: rgba(255,255,255,.45); animation: themeSweep 5s ease-in-out infinite; pointer-events: none; }
+    .swiper-slide, .sig-card { animation: showroomFloat 7s ease-in-out infinite; }
+    .sig-card:nth-child(2), .swiper-slide:nth-child(2) { animation-delay: -1.2s; }
+    .sig-card:nth-child(3), .swiper-slide:nth-child(3) { animation-delay: -2.4s; }
+    @keyframes themeSweep { 0%, 60% { left: -90%; } 82%, 100% { left: 140%; } }
+    @keyframes showroomFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    @media (prefers-reduced-motion: reduce) { .theme-toggle::after, .swiper-slide, .sig-card { animation: none !important; } }
+    .ambient-background { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; opacity: .72; }
+    .ambient-background::before,
+    .ambient-background::after { content: ""; position: absolute; inset: -20%; background-repeat: repeat; }
+    .ambient-background::before {
+      background-image: radial-gradient(circle, rgba(95,247,255,.8) 0 1px, transparent 1.8px), radial-gradient(circle, rgba(188,19,254,.65) 0 1px, transparent 1.8px);
+      background-size: 115px 135px, 185px 175px;
+      animation: starDrift 28s linear infinite;
+    }
+    .ambient-background::after {
+      background: repeating-linear-gradient(108deg, transparent 0 12%, rgba(95,247,255,.12) 12.1% 12.25%, transparent 12.4% 25%);
+      transform: skewY(-8deg);
+      animation: roadTrails 9s linear infinite;
+    }
+    .ambient-background .ambient-orbit,
+    .ambient-background .ambient-orbit::before,
+    .ambient-background .ambient-orbit::after { position: absolute; border: 1px solid rgba(95,247,255,.2); border-radius: 50%; }
+    .ambient-orbit { width: 42vw; height: 15vw; left: 29vw; top: 56vh; transform: rotate(-12deg); box-shadow: 0 0 45px rgba(95,247,255,.08); animation: orbitPulse 5s ease-in-out infinite; }
+    .ambient-orbit::before { content: ""; inset: 12%; border-color: rgba(188,19,254,.16); transform: rotate(24deg); }
+    .ambient-orbit::after { content: ""; inset: 27%; border-color: rgba(247,201,92,.13); transform: rotate(-38deg); }
+    body > header, body > section { position: relative; z-index: 1; }
+    @keyframes starDrift { from { transform: translate3d(0,0,0); } to { transform: translate3d(115px,135px,0); } }
+    @keyframes roadTrails { from { background-position: 0 0; } to { background-position: 0 100vh; } }
+    @keyframes orbitPulse { 0%, 100% { opacity: .35; transform: rotate(-12deg) scale(.98); } 50% { opacity: .8; transform: rotate(-8deg) scale(1.03); } }
+    html[data-theme="light"] .ambient-background { opacity: .38; }
+    @media (prefers-reduced-motion: reduce) { .ambient-background::before, .ambient-background::after, .ambient-orbit { animation: none !important; } }
+  </style>
 </head>
 <body>
+  <div class="ambient-background" aria-hidden="true"><span class="ambient-orbit"></span></div>
 
   <header>
     <h1>Velonix Garage</h1>
     <!-- Link back to Main Page -->
-    <a href="Midterm.html" class="back-btn"><i class="fas fa-home"></i> Home</a>
+    <a href="index.html" class="back-btn"><i class="fas fa-home"></i> Home</a>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light theme" title="Switch to light theme" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☼</span><span class="theme-label">Light</span></button>
   </header>
 
   <!-- SECTION 1: START YOUR BUILD (Linked to Configurator) -->
   <section data-aos="fade-up">
     <h2>Select Base Chassis</h2>
     <p class="section-desc">Choose a platform to begin your custom project. The gallery is now automated to showcase our fleet.</p>
+    <div class="showroom-meta" aria-label="Garage highlights">
+    <span>5 chassis classes</span><span>Real-time preview</span><span>No wrong turns</span>
+    </div>
     
     <div class="swiper">
       <div class="swiper-wrapper">
         
         <!-- LINK 1: Spectre (Car) -->
-        <div class="swiper-slide" onclick="window.location.href='customize.html?model=spectre'">
+        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=spectre'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=spectre'}">
           <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop" alt="Spectre">
           <h4>Street Racer — Spectre</h4>
         </div>
 
         <!-- LINK 2: Titan Bike (FIXED IMAGE) -->
-        <div class="swiper-slide" onclick="window.location.href='customize.html?model=titan'">
+        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=titan'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=titan'}">
           <img src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?q=80&w=2070&auto=format&fit=crop" alt="Titan Bike">
           <h4>Future Cycle — Titan</h4>
         </div>
 
         <!-- LINK 3: Behemoth (SUV) -->
-        <div class="swiper-slide" onclick="window.location.href='customize.html?model=behemoth'">
+        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=behemoth'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=behemoth'}">
           <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop" alt="Behemoth">
           <h4>Heavy Duty — Behemoth</h4>
         </div>
 
         <!-- LINK 4: Vortex (Hyper Car) -->
-        <div class="swiper-slide" onclick="window.location.href='customize.html?model=vortex'">
-          <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop" alt="Vortex">
+        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=vortex'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=vortex'}">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop" alt="Red Vortex hypercar">
           <h4>Hyper Velocity — Vortex</h4>
         </div>
 
-        <!-- LINK 5: Neon Transit (Bus) -->
-        <div class="swiper-slide" onclick="window.location.href='customize.html?model=bus'">
-          <img src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=2071&auto=format&fit=crop" alt="Neon Transit">
-          <h4>Mass Transit — Neon Bus</h4>
-        </div>
-
-        <!-- LINK 6: Cyber Hauler (Truck) -->
-        <div class="swiper-slide" onclick="window.location.href='customize.html?model=hauler'">
+        <!-- LINK 5: Cyber Hauler (Truck) -->
+        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=hauler'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=hauler'}">
           <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop" alt="Cyber Hauler">
           <h4>Logistics — Cyber Hauler</h4>
         </div>
@@ -259,7 +410,7 @@
 
   <!-- SCRIPTS -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script>AOS.init({duration:1200});</script>
+  <script>const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; AOS.init({duration: reduceMotion ? 0 : 1200, disable: reduceMotion});</script>
   <script src="https://unpkg.com/swiper@9/swiper-bundle.min.js"></script>
   <script>
     // --- UPDATED SWIPER CONFIG (AUTOPLAY) ---
@@ -267,7 +418,7 @@
       slidesPerView: 1, 
       spaceBetween: 30,
       loop: true, // Infinite Scroll
-      autoplay: {
+      autoplay: reduceMotion ? false : {
         delay: 2500, // 2.5 seconds per slide
         disableOnInteraction: false,
       },
@@ -277,6 +428,29 @@
         1200: { slidesPerView: 3 } 
       }
     });
+  </script>
+  <script>
+    (function () {
+      var themeKey = 'velonix-theme';
+      var toggle = document.querySelector('[data-theme-toggle]');
+      if (!toggle) return;
+      function applyTheme(theme) {
+        var normalized = theme === 'light' ? 'light' : 'dark';
+        var isLight = normalized === 'light';
+        document.documentElement.dataset.theme = normalized;
+        document.documentElement.style.colorScheme = normalized;
+        try { localStorage.setItem(themeKey, normalized); } catch (error) {}
+        document.cookie = themeKey + '=' + normalized + '; path=/; max-age=31536000; SameSite=Lax';
+        toggle.setAttribute('aria-pressed', String(isLight));
+        toggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        toggle.title = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+        toggle.innerHTML = '<span class="theme-icon" aria-hidden="true">' + (isLight ? '☾' : '☼') + '</span><span class="theme-label">' + (isLight ? 'Dark' : 'Light') + '</span>';
+      }
+      toggle.addEventListener('click', function () {
+        applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+      });
+      applyTheme(document.documentElement.dataset.theme || 'dark');
+    }());
   </script>
 </body>
 </html>
