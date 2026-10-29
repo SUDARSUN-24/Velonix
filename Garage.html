@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
+  <div class="curtain" aria-hidden="true"></div>
 
   <header class="site-header">
     <a class="brand" href="index.html"><span class="logo">VELONIX</span><span>Garage</span></a>
@@ -40,16 +41,18 @@
       <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
       <a href="customize.html" class="back-btn"><i class="fas fa-cube"></i><span class="label">Open Lab</span></a>
     </div>
+    <span class="progress" aria-hidden="true"></span>
   </header>
 
   <main>
     <!-- PAGE HEAD -->
     <section class="page-head">
-      <div class="wrap reveal">
-        <div class="eyebrow">The Showroom</div>
-        <h2>Select base chassis</h2>
-        <p class="lead">Choose a platform to begin your custom project. Each one opens directly in the 3D lab, ready for paint, wheels, lighting and power.</p>
-        <div class="meta-row">
+      <div class="grid-floor" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="eyebrow intro">The Showroom</div>
+        <h2 class="split-text">Select base chassis</h2>
+        <p class="lead intro" style="--d:.4s">Choose a platform to begin your custom project. Each one opens directly in the 3D lab, ready for paint, wheels, lighting and power.</p>
+        <div class="meta-row intro" style="--d:.55s">
           <span class="chip"><i class="fas fa-layer-group"></i>5 chassis classes</span>
           <span class="chip"><i class="fas fa-cube"></i>Real-time 3D preview</span>
           <span class="chip"><i class="fas fa-tag"></i>Live pricing</span>
@@ -244,6 +247,7 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="site.js"></script>
 </body>
 </html>

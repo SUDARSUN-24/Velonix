@@ -15,6 +15,12 @@
       } catch (error) {}
     }());
     document.documentElement.classList.add('js');
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('velonix-boot')) {
+        document.documentElement.classList.add('boot-on');
+        sessionStorage.setItem('velonix-boot', '1');
+      }
+    } catch (error) {}
   </script>
   <title>Velonix Customs | Custom Vehicle Studio</title>
   <meta name="description" content="Velonix Customs engineers expressive, futuristic vehicle builds through a cinematic 3D configurator.">
@@ -26,6 +32,14 @@
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
+  <div class="boot" aria-hidden="true">
+    <div class="boot-inner">
+      <div class="boot-logo"><span style="--i:0">V</span><span style="--i:1">E</span><span style="--i:2">L</span><span style="--i:3">O</span><span style="--i:4">N</span><span style="--i:5">I</span><span style="--i:6">X</span></div>
+      <div class="boot-bar"><span></span></div>
+      <div class="boot-status"><span>Initialising studio</span><b></b></div>
+    </div>
+  </div>
+  <div class="curtain" aria-hidden="true"></div>
 
   <header class="site-header">
     <a class="brand" href="index.html"><span class="logo">VELONIX</span><span>Customs</span></a>
@@ -41,25 +55,29 @@
       <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
       <a href="customize.html" class="back-btn"><i class="fas fa-cube"></i><span class="label">Open Lab</span></a>
     </div>
+    <span class="progress" aria-hidden="true"></span>
   </header>
 
   <main>
     <!-- HERO -->
     <section class="hero">
+      <div class="grid-floor" aria-hidden="true"></div>
       <div class="wrap">
         <div class="hero-grid">
-          <div class="reveal">
-            <div class="eyebrow">Velonix Customs Studio</div>
-            <h2>Build the machine <em>only you</em> could own.</h2>
-            <p class="lead">Transforming every vehicle into a masterpiece — from cars and bikes to trucks and electric beasts. Precision, power, and creativity define our craft.</p>
-            <div class="hero-actions">
+          <div>
+            <div class="eyebrow intro">Velonix Customs Studio</div>
+            <h2 class="split-text">Build the machine <em>only you</em> could own.</h2>
+            <p class="lead intro" style="--d:.55s">Transforming every vehicle into a masterpiece — from cars and bikes to trucks and electric beasts. Precision, power, and creativity define our craft.</p>
+            <div class="hero-actions intro" style="--d:.7s">
               <a class="btn" href="customize.html">Start Customizing <i class="fas fa-arrow-right"></i></a>
               <a class="btn ghost" href="Garage.html">Explore the Garage</a>
             </div>
           </div>
 
-          <div class="media frame hero-stage reveal">
+          <div class="stage-wrap" style="--d:.15s">
+          <div class="media hero-stage">
             <img src="side.png" alt="Matte graphite Apex Vortex hypercar with glowing blue headlights in a dark studio">
+            <span class="scan" aria-hidden="true"></span>
             <span class="stage-chip"><span class="dot"></span>Live 3D Studio</span>
             <div class="stage-specs">
               <div class="name"><small>Mid-Engine Hypercar</small>Apex Vortex</div>
@@ -70,16 +88,26 @@
               </dl>
             </div>
           </div>
+          </div>
         </div>
 
-        <div class="hero-strip reveal">
-          <div><b>5</b><span>Base platforms</span></div>
-          <div><b>3</b><span>Studio scenes</span></div>
-          <div><b>360°</b><span>Orbit &amp; interior views</span></div>
-          <div><b>Live</b><span>Pricing &amp; performance</span></div>
+        <div class="hero-strip intro" style="--d:.9s">
+          <div><b data-count="5">5</b><span>Base platforms</span></div>
+          <div><b data-count="3">3</b><span>Studio scenes</span></div>
+          <div><b data-count="360" data-suffix="°">360°</b><span>Orbit &amp; interior views</span></div>
+          <div><b data-scramble>Live</b><span>Pricing &amp; performance</span></div>
         </div>
       </div>
     </section>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-skew">
+        <div class="ticker-track">
+          <span>Velonix Spectre</span><span>Apex Vortex</span><span>Cyberdyne Behemoth</span><span>Cyber Hauler</span><span>Titan Edge</span><span>Built to be yours</span>
+          <span>Velonix Spectre</span><span>Apex Vortex</span><span>Cyberdyne Behemoth</span><span>Cyber Hauler</span><span>Titan Edge</span><span>Built to be yours</span>
+        </div>
+      </div>
+    </div>
 
     <!-- ABOUT -->
     <section id="about" class="section">
@@ -233,6 +261,7 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="site.js"></script>
 </body>
 </html>
