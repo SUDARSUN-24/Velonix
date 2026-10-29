@@ -18,7 +18,7 @@
     spectre:  { name: 'Velonix Spectre',    short: 'Spectre',  type: 'car',   zero: 3.9 },
     vortex:   { name: 'Apex Vortex',        short: 'Vortex',   type: 'car',   zero: 2.6 },
     behemoth: { name: 'Cyberdyne Behemoth', short: 'Behemoth', type: 'car',   zero: 4.1 },
-    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck', zero: 11.8 },  // no factory figure in the Lab, so an estimate
+    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck', zero: 11.8, est: true },  // no factory figure in the Lab, so an estimate
     titan:    { name: 'Titan Edge Bike',    short: 'Titan',    type: 'bike',  zero: 3.1 }
   };
   const ORDER = Object.keys(MODELS);
@@ -333,7 +333,12 @@
       throttle = true;
       btn.classList.add('held');
     }
-    function release() { throttle = false; btn.classList.remove('held'); }
+    function release() { throttle = false; btn.classList.remove('held'); sound.init(); }
+    // Mobile browsers only unlock audio on pointerup/touchend/keydown, so open it on the first such gesture anywhere
+    const unlock = () => { if (muted) return; sound.init(); ['pointerup', 'touchend', 'keydown'].forEach(t => removeEventListener(t, unlock, true)); };
+    ['pointerup', 'touchend', 'keydown'].forEach(t => addEventListener(t, unlock, true));
+    // rAF stops in a background tab, so stop the run and the engine note with it
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { abort(); if (sound.ctx) sound.ctx.suspend(); } });
 
     btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture(e.pointerId); press(); });
     btn.addEventListener('pointerup', release);
@@ -386,7 +391,7 @@
       busy: () => st === 'stage' || st === 'run',
       onModel() {
         q('model').textContent = MODELS[modelId].name;
-        q('factory').textContent = zeroFor(modelId).toFixed(1) + ' s';
+        q('factory').textContent = zeroFor(modelId).toFixed(1) + ' s' + (MODELS[modelId].est ? ' (est.)' : '');
         $$('[data-lc-pick]', box).forEach(b => b.classList.toggle('on', b.dataset.lcPick === modelId));
         paintBest();
       }
