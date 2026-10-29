@@ -14,560 +14,225 @@
         if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
       } catch (error) {}
     }());
+    document.documentElement.classList.add('js');
   </script>
-  <title>Velonix Customs | Cyberpunk Night Edition</title>
-  <meta name="description" content="Velonix Customs engineers expressive, futuristic vehicle builds through a cinematic digital configurator.">
-  
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/swiper@9/swiper-bundle.min.css" />
-  
-  <style>
-    /* 1. FONTS: Orbitron (Headings) + Rajdhani (Body) */
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600&display=swap');
-
-    :root {
-      /* THEME COLOR: Electric Neon Purple */
-      --neon-color: #bc13fe; 
-      --neon-glow: rgba(188, 19, 254, 0.5);
-      --bg-dark: #0b0d10;
-      --text-main: #ffffff;
-      --glass-bg: rgba(20, 20, 20, 0.7);
-    }
-
-    * { margin:0; padding:0; box-sizing:border-box; }
-    
-    body {
-      background: var(--bg-dark);
-      color: var(--text-main);
-      overflow-x: hidden;
-      scroll-behavior: smooth;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.15rem;
-    }
-
-    h1, h2, h3, h4, .btn-primary, nav a {
-      font-family: 'Orbitron', sans-serif; 
-    }
-
-    /* Floating Neon Lines (Purple) */
-    body::before,body::after{
-      content:"";position:fixed;width:2px;height:100vh;top:0;
-      background:linear-gradient(180deg, var(--neon-color), transparent, var(--neon-color));
-      animation:moveLine 8s linear infinite;
-      opacity:0.3;
-      z-index: -1;
-    }
-    body::after{left:auto;right:10px;animation-delay:4s;}
-    @keyframes moveLine{
-      0%{transform:translateY(-100%);}
-      100%{transform:translateY(100%);}
-    }
-
-    /* HEADER */
-    header {
-      background: rgba(5, 5, 5, 0.95);
-      backdrop-filter: blur(15px);
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(188, 19, 254, 0.3); /* Purple border */
-      position: fixed;
-      top: 0; left: 0; width: 100%;
-      z-index: 1000;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-    }
-    header h1 {
-      font-size: 1.6rem;
-      color: var(--neon-color);
-      text-shadow: 0 0 15px var(--neon-glow);
-      letter-spacing: 2px;
-    }
-    nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-    nav a {
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 1rem;
-      transition: .3s;
-      letter-spacing: 1px;
-    }
-    nav a:hover {
-      color: var(--neon-color);
-      text-shadow: 0 0 10px var(--neon-color);
-    }
-
-    /* HERO */
-    .hero {
-      height: 100vh;
-      background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('front.png') center/cover no-repeat;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding-top: 80px;
-    }
-    
-    .neon-grid {
-      position: absolute; inset: 0;
-      /* Purple Grid */
-      background: repeating-linear-gradient(90deg,rgba(188, 19, 254, .04) 1px,transparent 60px),
-      repeating-linear-gradient(0deg,rgba(188, 19, 254, .04) 1px,transparent 60px);
-      animation: moveGrid 20s linear infinite;
-      z-index: 0;
-      pointer-events: none;
-    }
-    @keyframes moveGrid{
-      from{background-position:0 0,0 0;}
-      to{background-position:60px 60px,60px 60px;}
-    }
-
-    .hero h2, .hero p, .btn-primary { position: relative; z-index: 2; }
-    
-    .hero h2 {
-      font-size: 3.5rem;
-      color: #ffffff;
-      text-shadow: 0 0 20px var(--neon-color), 0 0 40px var(--neon-color); /* Strong Purple Glow */
-      margin-bottom: 20px;
-    }
-    
-    .hero p {
-      font-size: 1.3rem;
-      max-width: 750px;
-      color: #e0e0e0;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 25px;
-      border-radius: 10px;
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(188, 19, 254, 0.2);
-      line-height: 1.6;
-    }
-
-    .btn-primary {
-      margin-top: 30px;
-      padding: 15px 40px;
-      border: 2px solid var(--neon-color);
-      color: var(--neon-color);
-      background: rgba(0, 0, 0, 0.8);
-      font-size: 1.1rem;
-      letter-spacing: 2px;
-      cursor: pointer;
-      transition: .3s;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    .btn-primary:hover {
-      background: var(--neon-color);
-      color: #fff;
-      box-shadow: 0 0 30px var(--neon-color);
-    }
-
-    /* SECTIONS */
-    section { padding: 100px 10%; text-align: center; }
-    
-    section h2 {
-      font-size: 2.5rem;
-      color: var(--neon-color);
-      margin-bottom: 40px;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      text-shadow: 0 0 15px var(--neon-glow);
-    }
-
-    /* ABOUT CARD */
-    .about p {
-      max-width: 900px;
-      margin: 0 auto;
-      color: #f0f0f0;
-      background: var(--glass-bg);
-      padding: 30px;
-      border-radius: 15px;
-      border-left: 4px solid var(--neon-color);
-      line-height: 1.8;
-      font-size: 1.2rem;
-      text-align: left;
-    }
-
-    /* GALLERY */
-    #gallery {
-      background: #080808;
-      border-top: 1px solid #222;
-      border-bottom: 1px solid #222;
-    }
-    #gallery p { 
-      margin-bottom: 40px; 
-      color: #ccc; 
-      font-size: 1.15rem;
-      max-width: 800px;
-      margin: 0 auto 40px auto;
-    }
-
-    .swiper { margin-top: 20px; padding-bottom: 50px; }
-    .swiper-slide {
-        background: #111;
-        border-radius: 15px;
-        padding-bottom: 15px;
-        border: 1px solid #333;
-    }
-    .swiper-slide img {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      border-radius: 15px 15px 0 0;
-    }
-    .swiper-slide h4 {
-      margin-top: 15px;
-      color: #fff;
-      font-size: 1.2rem;
-      letter-spacing: 1px;
-    }
-
-    /* FEATURES */
-    .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
-    .feature-card {
-      background: #121212;
-      padding: 40px 30px;
-      border-radius: 10px;
-      width: 300px;
-      border: 1px solid #333;
-      transition: .3s;
-    }
-    .feature-card:hover {
-      border-color: var(--neon-color);
-      box-shadow: 0 0 20px var(--neon-glow);
-      transform: translateY(-5px);
-    }
-    .feature-card h3 { color: var(--neon-color); margin-bottom: 15px; font-size: 1.4rem; }
-    .feature-card p { color: #e0e0e0; line-height: 1.6; font-size: 1.05rem; }
-
-    footer {
-      background: #050505;
-      color: #aaa;
-      padding: 60px 10%;
-      text-align: center;
-      border-top: 1px solid var(--neon-color);
-    }
-    footer h3 { color: #fff; margin-bottom: 15px; }
-    footer p { margin: 5px 0; }
-  </style>
-  <style>
-    :root {
-      --cyan: #5ff7ff;
-      --gold: #f7c95c;
-      --ink: #070812;
-      --panel: rgba(15, 16, 31, .78);
-      --muted: #a9abc5;
-    }
-    html { scroll-behavior: smooth; }
-    body {
-      background:
-        radial-gradient(circle at 15% 10%, rgba(188,19,254,.16), transparent 30rem),
-        radial-gradient(circle at 90% 70%, rgba(95,247,255,.08), transparent 28rem),
-        var(--ink);
-      line-height: 1.5;
-    }
-    body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; }
-    header { padding: 18px clamp(20px, 6vw, 88px); border-bottom-color: rgba(95,247,255,.35); }
-    header h1 { font-size: clamp(1.1rem, 2vw, 1.55rem); }
-    nav { gap: clamp(12px, 2vw, 28px); }
-    nav a { color: #e8e8f4; font-size: .82rem; }
-    nav a:focus-visible, .btn-primary:focus-visible, .swiper-slide:focus-visible {
-      outline: 2px solid var(--cyan); outline-offset: 4px;
-    }
-    .hero {
-      min-height: 94vh; height: auto; padding: 150px 6% 110px;
-      background: linear-gradient(110deg, rgba(4,5,14,.9), rgba(9,5,21,.5)), url('front.png') center/cover no-repeat;
-      isolation: isolate;
-    }
-    .hero::before {
-      content: ""; position: absolute; inset: 0; z-index: 1;
-      background: linear-gradient(108deg, transparent 32%, rgba(95,247,255,.08) 43%, rgba(255,255,255,.5) 48%, rgba(188,19,254,.12) 53%, transparent 64%);
-      background-size: 220% 100%;
-      mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
-      pointer-events: none;
-      animation: carReflection 7s ease-in-out infinite;
-    }
-    .hero h2 { max-width: 900px; font-size: clamp(2.2rem, 7vw, 5.8rem); line-height: 1.05; letter-spacing: .05em; }
-    .hero h2::first-line { color: #fff; }
-    .hero p { max-width: 680px; padding: 18px 22px; color: #dfe1f1; background: rgba(5,5,15,.62); border: 1px solid rgba(95,247,255,.2); box-shadow: 0 0 40px rgba(188,19,254,.12); }
-    .hero .eyebrow { position: relative; z-index: 2; color: var(--cyan); text-transform: uppercase; letter-spacing: .3em; font-size: .75rem; margin-bottom: 18px; }
-    .hero .btn-primary { display: inline-block; text-decoration: none; margin-top: 28px; }
-    .btn-primary { border-color: var(--cyan); color: var(--cyan); border-radius: 999px; padding: 14px 30px; }
-    .btn-primary:hover { background: var(--cyan); color: #071018; box-shadow: 0 0 28px rgba(95,247,255,.65); }
-    section { padding: clamp(72px, 10vw, 125px) 6%; position: relative; }
-    section h2 { font-size: clamp(1.7rem, 4vw, 3rem); margin-bottom: 20px; }
-    .about p, .feature-card, .swiper-slide { background: var(--panel); border-color: rgba(188,19,254,.25); backdrop-filter: blur(12px); }
-    .about p { border-left-color: var(--cyan); max-width: 900px; }
-    #gallery { background: rgba(3,4,12,.72); }
-    .swiper-slide { transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease; cursor: pointer; }
-    .swiper-slide:hover { border-color: var(--cyan); box-shadow: 0 16px 40px rgba(95,247,255,.14); transform: translateY(-8px); }
-    .swiper-slide img { filter: saturate(.8) contrast(1.08); transition: transform .5s ease, filter .5s ease; }
-    .swiper-slide:hover img { transform: scale(1.05); filter: saturate(1.15) contrast(1.1); }
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); max-width: 1120px; margin: auto; }
-    .feature-card { width: auto; min-height: 190px; text-align: left; padding: 30px; }
-    .feature-card::before { content: "///"; color: var(--gold); display: block; font-family: Orbitron; font-size: .75rem; letter-spacing: .2em; margin-bottom: 18px; }
-    .feature-card h3 { font-size: 1.1rem; }
-    .feature-card p { color: var(--muted); }
-    #customize { background: linear-gradient(135deg, rgba(188,19,254,.12), rgba(95,247,255,.06)); }
-    #customize p { max-width: 650px; margin: 0 auto; color: var(--muted) !important; }
-    footer { padding: 65px 6%; color: var(--muted); }
-    footer h3 { color: #fff; }
-    @media (max-width: 700px) {
-      header { align-items: flex-start; gap: 14px; flex-direction: column; }
-      nav { gap: 10px 15px; }
-      nav a { font-size: .75rem; }
-      .hero { padding-top: 180px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
-    }
-  </style>
-  <style>
-    /* Shared theme system and motion polish */
-    :root {
-      --theme-bg: #070812; --theme-text: #f4f3ff; --theme-muted: #a9abc5;
-      --theme-panel: rgba(15, 16, 31, .78); --theme-header: rgba(5, 5, 15, .82);
-      --theme-section: rgba(3, 4, 12, .72); --theme-border: rgba(95, 247, 255, .24); --theme-shadow: rgba(0, 0, 0, .35);
-    }
-    html[data-theme="light"] {
-      --theme-bg: #f3f5ff; --theme-text: #17142d; --theme-muted: #4e5874;
-      --theme-panel: rgba(255, 255, 255, .82); --theme-header: rgba(248, 249, 255, .86);
-      --theme-section: rgba(232, 237, 252, .82); --theme-border: rgba(87, 44, 166, .24); --theme-shadow: rgba(35, 24, 83, .16);
-    }
-    body { background-color: var(--theme-bg); color: var(--theme-text); transition: background-color .45s ease, color .45s ease; }
-    header { flex-wrap: wrap; background: var(--theme-header); border-bottom-color: var(--theme-border); box-shadow: 0 4px 30px var(--theme-shadow); transition: background .45s ease, border-color .45s ease, box-shadow .45s ease; animation: headerEnter .8s cubic-bezier(.2,.8,.2,1) both; }
-    nav a { color: var(--theme-text); }
-    .theme-toggle { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--cyan); border-radius: 999px; padding: 8px 13px; color: var(--theme-text); background: rgba(95,247,255,.08); font: 600 .72rem Orbitron, sans-serif; letter-spacing: .08em; cursor: pointer; transition: transform .25s ease, background .25s ease, color .25s ease, box-shadow .25s ease; }
-    .theme-toggle:hover { transform: translateY(-2px); color: #071018; background: var(--cyan); box-shadow: 0 0 18px rgba(95,247,255,.35); }
-    .theme-toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
-    .theme-icon { font-size: 1rem; line-height: 1; }
-    .hero { animation: heroEnter 1s cubic-bezier(.2,.8,.2,1) both; }
-    .hero > *:not(.neon-grid) { animation: contentRise .8s cubic-bezier(.2,.8,.2,1) both; }
-    .hero > .eyebrow { animation-delay: .15s; } .hero > h2 { animation-delay: .28s; }
-    .hero > p { animation-delay: .4s; } .hero > .btn-primary { animation-delay: .52s; }
-    .hero::after { content: ""; position: absolute; inset: 12% 18%; background: radial-gradient(circle, rgba(95,247,255,.12), transparent 62%); filter: blur(12px); z-index: 0; pointer-events: none; animation: glowPulse 6s ease-in-out infinite; }
-    .btn-primary { position: relative; overflow: hidden; isolation: isolate; }
-    .btn-primary::after { content: ""; position: absolute; inset: 0 auto 0 -120%; width: 55%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: buttonShimmer 4.5s ease-in-out infinite; pointer-events: none; }
-    section { transition: background-color .45s ease, color .45s ease; }
-    .about p, .feature-card, .swiper-slide { background: var(--theme-panel); border-color: var(--theme-border); box-shadow: 0 12px 30px var(--theme-shadow); transition: background .45s ease, border-color .35s ease, box-shadow .35s ease, transform .35s ease; }
-    .about p, .feature-card p, #gallery p, #customize p, footer { color: var(--theme-muted); }
-    #gallery { background: var(--theme-section); border-color: var(--theme-border); }
-    .swiper-slide h4, footer h3 { color: var(--theme-text); }
-    footer { background: var(--theme-header); border-top-color: var(--neon-color); transition: background .45s ease, color .45s ease; }
-    .feature-card:hover, .swiper-slide:hover { transform: translateY(-8px); }
-    @keyframes headerEnter { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes heroEnter { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes contentRise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes glowPulse { 0%, 100% { opacity: .35; transform: scale(.96); } 50% { opacity: .7; transform: scale(1.04); } }
-    @keyframes buttonShimmer { 0%, 55% { left: -120%; } 75%, 100% { left: 140%; } }
-    html[data-theme="light"] body { background: radial-gradient(circle at 15% 10%, rgba(188,19,254,.12), transparent 30rem), radial-gradient(circle at 90% 70%, rgba(0, 190, 210, .12), transparent 28rem), var(--theme-bg); }
-    html[data-theme="light"] .hero { background: linear-gradient(110deg, rgba(243,245,255,.86), rgba(237,231,255,.58)), url('front.png') center/cover no-repeat; }
-    html[data-theme="light"] .hero h2 { color: #28144f; text-shadow: 0 0 20px rgba(188,19,254,.28); }
-    html[data-theme="light"] .hero p { color: #29324d; background: rgba(255,255,255,.72); border-color: rgba(87,44,166,.25); }
-    html[data-theme="light"] #customize { background: linear-gradient(135deg, rgba(188,19,254,.1), rgba(0, 190, 210, .1)); }
-    @media (max-width: 700px) { .theme-toggle { align-self: flex-start; } }
-    @keyframes carReflection { 0%, 22% { background-position: 120% 0; opacity: 0; } 42%, 62% { background-position: 0 0; opacity: 1; } 82%, 100% { background-position: -120% 0; opacity: 0; } }
-    @media (prefers-reduced-motion: reduce) { .hero::before, .hero::after, .btn-primary::after, .hero > *:not(.neon-grid), header { animation: none !important; } }
-    html[data-theme="light"] #customize p { color: var(--theme-muted) !important; }
-    html[data-theme="light"] body,
-    html[data-theme="light"] section,
-    html[data-theme="light"] #gallery,
-    html[data-theme="light"] footer { color: var(--theme-text); }
-    html[data-theme="light"] header { background: var(--theme-header); }
-    html[data-theme="light"] nav a { color: #28144f; }
-    html[data-theme="light"] section h2,
-    html[data-theme="light"] .feature-card h3 { color: #5d2bb8; }
-    html[data-theme="light"] .about p,
-    html[data-theme="light"] .feature-card,
-    html[data-theme="light"] .swiper-slide { background: var(--theme-panel); }
-    html[data-theme="light"] .feature-card p,
-    html[data-theme="light"] #gallery p,
-    html[data-theme="light"] footer p { color: var(--theme-muted); }
-    html[data-theme="light"] .swiper-slide h4,
-    html[data-theme="light"] footer h3 { color: var(--theme-text); }
-    html[data-theme="light"] #gallery { background: var(--theme-section) !important; }
-    html[data-theme="light"] .btn-primary { color: #fff; }
-    .theme-toggle { position: relative; overflow: hidden; }
-    .theme-toggle::after { content: ""; position: absolute; inset: 0 auto 0 -90%; width: 45%; transform: skewX(-22deg); background: rgba(255,255,255,.45); animation: themeSweep 5s ease-in-out infinite; pointer-events: none; }
-    .feature-card, .swiper-slide { animation: cardLift 6s ease-in-out infinite; }
-    .feature-card:nth-child(2), .swiper-slide:nth-child(2) { animation-delay: -.8s; }
-    .feature-card:nth-child(3), .swiper-slide:nth-child(3) { animation-delay: -1.6s; }
-    @keyframes themeSweep { 0%, 60% { left: -90%; } 82%, 100% { left: 140%; } }
-    @keyframes cardLift { 0%, 100% { box-shadow: 0 12px 30px var(--theme-shadow); } 50% { box-shadow: 0 16px 38px rgba(95,247,255,.13); } }
-    @media (prefers-reduced-motion: reduce) { .theme-toggle::after, .feature-card, .swiper-slide { animation: none !important; } }
-    .ambient-background { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; opacity: .72; }
-    .ambient-background::before,
-    .ambient-background::after { content: ""; position: absolute; inset: -20%; background-repeat: repeat; }
-    .ambient-background::before {
-      background-image: radial-gradient(circle, rgba(95,247,255,.8) 0 1px, transparent 1.8px), radial-gradient(circle, rgba(188,19,254,.65) 0 1px, transparent 1.8px);
-      background-size: 115px 135px, 185px 175px;
-      animation: starDrift 28s linear infinite;
-    }
-    .ambient-background::after {
-      background: repeating-linear-gradient(108deg, transparent 0 12%, rgba(95,247,255,.12) 12.1% 12.25%, transparent 12.4% 25%);
-      transform: skewY(-8deg);
-      animation: roadTrails 9s linear infinite;
-    }
-    .ambient-background .ambient-orbit,
-    .ambient-background .ambient-orbit::before,
-    .ambient-background .ambient-orbit::after { position: absolute; border: 1px solid rgba(95,247,255,.2); border-radius: 50%; }
-    .ambient-orbit { width: 42vw; height: 15vw; left: 29vw; top: 56vh; transform: rotate(-12deg); box-shadow: 0 0 45px rgba(95,247,255,.08); animation: orbitPulse 5s ease-in-out infinite; }
-    .ambient-orbit::before { content: ""; inset: 12%; border-color: rgba(188,19,254,.16); transform: rotate(24deg); }
-    .ambient-orbit::after { content: ""; inset: 27%; border-color: rgba(247,201,92,.13); transform: rotate(-38deg); }
-    body > header, body > section, body > footer { position: relative; z-index: 1; }
-    @keyframes starDrift { from { transform: translate3d(0,0,0); } to { transform: translate3d(115px,135px,0); } }
-    @keyframes roadTrails { from { background-position: 0 0; } to { background-position: 0 100vh; } }
-    @keyframes orbitPulse { 0%, 100% { opacity: .35; transform: rotate(-12deg) scale(.98); } 50% { opacity: .8; transform: rotate(-8deg) scale(1.03); } }
-    html[data-theme="light"] .ambient-background { opacity: .38; }
-    @media (prefers-reduced-motion: reduce) { .ambient-background::before, .ambient-background::after, .ambient-orbit { animation: none !important; } }
-  </style>
+  <title>Velonix Customs | Custom Vehicle Studio</title>
+  <meta name="description" content="Velonix Customs engineers expressive, futuristic vehicle builds through a cinematic 3D configurator.">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="site.css">
 </head>
 <body>
-  <div class="ambient-background" aria-hidden="true"><span class="ambient-orbit"></span></div>
 
-  <header>
-    <h1>Velonix Customs</h1>
-    <nav>
-      <a href="#">Home</a>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="logo">VELONIX</span><span>Customs</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Home</a>
       <a href="#about">About</a>
-     <a href="Garage.html">Garage</a>
+      <a href="Garage.html">Garage</a>
       <a href="#features">Features</a>
-      <a href="#customize">Customize</a>
+      <a href="customize.html">Customize</a>
       <a href="#contact">Contact</a>
     </nav>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light theme" title="Switch to light theme" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☼</span><span class="theme-label">Light</span></button>
+    <div class="head-actions">
+      <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
+      <a href="customize.html" class="back-btn"><i class="fas fa-cube"></i><span class="label">Open Lab</span></a>
+    </div>
   </header>
 
-  <section class="hero" data-aos="fade-up">
-    <span class="eyebrow">Vehicle systems / 01 — online</span>
-    <h2>Welcome to Velonix Customs</h2>
-    <p>Transforming every vehicle into a masterpiece — from cars and bikes to trucks and electric beasts. Precision, power, and creativity define our craft.</p>
-   <!-- Update the href to point to your new garage page -->
-<a class="btn-primary" href="Garage.html">Explore the Garage <span aria-hidden="true">↗</span></a>
-  </section>
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div class="reveal">
+            <div class="eyebrow">Velonix Customs Studio</div>
+            <h2>Build the machine <em>only you</em> could own.</h2>
+            <p class="lead">Transforming every vehicle into a masterpiece — from cars and bikes to trucks and electric beasts. Precision, power, and creativity define our craft.</p>
+            <div class="hero-actions">
+              <a class="btn" href="customize.html">Start Customizing <i class="fas fa-arrow-right"></i></a>
+              <a class="btn ghost" href="Garage.html">Explore the Garage</a>
+            </div>
+          </div>
 
-  <section id="about" class="about" data-aos="fade-up">
-    <h2>About Velonix Customs</h2>
-    <p>At Velonix Customs, we don't just modify vehicles — we reimagine them. Our team of expert engineers, designers, and dreamers bring the future of customization to life. Whether it's performance tuning, full-body redesign, or futuristic tech integration, we craft machines that define individuality.</p>
-  </section>
-
-  <section id="gallery" data-aos="fade-up">
-    <h2>Velonix Customs Garage</h2>
-    <p>Step into our high-tech workshop — a fusion of innovation and craftsmanship. Every build, from custom bikes to luxury SUVs, is powered by advanced design systems and creative vision.</p>
-    
-    <div class="swiper">
-      <div class="swiper-wrapper">
-        <!-- LINK 1: Default Garage (No specific model) -->
-        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html'}">
-          <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop" alt="Main HQ">
-          <h4>Velonix Main HQ</h4>
-        </div>
-        
-        <!-- LINK 2: Spectre (Sports Car) -->
-        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=spectre'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=spectre'}">
-          <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop" alt="Spectre">
-          <h4>Street Racer — Spectre</h4>
+          <div class="media frame hero-stage reveal">
+            <img src="side.png" alt="Matte graphite Apex Vortex hypercar with glowing blue headlights in a dark studio">
+            <span class="stage-chip"><span class="dot"></span>Live 3D Studio</span>
+            <div class="stage-specs">
+              <div class="name"><small>Mid-Engine Hypercar</small>Apex Vortex</div>
+              <dl class="specs">
+                <div><dt>Power hp</dt><dd>820</dd></div>
+                <div><dt>0-100 km/h</dt><dd>2.6s</dd></div>
+                <div><dt>Top km/h</dt><dd>340</dd></div>
+              </dl>
+            </div>
+          </div>
         </div>
 
-        <!-- LINK 3: Vortex (Hyper Car) -->
-        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=vortex'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=vortex'}">
-          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop" alt="Red Vortex hypercar">
-          <h4>Hyper Velocity — Vortex</h4>
-        </div>
-
-        <!-- LINK 4: Behemoth (SUV/Truck) -->
-        <div class="swiper-slide" role="link" tabindex="0" onclick="window.location.href='customize.html?model=behemoth'" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='customize.html?model=behemoth'}">
-          <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop" alt="Behemoth">
-          <h4>Heavy Duty — Behemoth</h4>
+        <div class="hero-strip reveal">
+          <div><b>5</b><span>Base platforms</span></div>
+          <div><b>3</b><span>Studio scenes</span></div>
+          <div><b>360°</b><span>Orbit &amp; interior views</span></div>
+          <div><b>Live</b><span>Pricing &amp; performance</span></div>
         </div>
       </div>
-      <div class="swiper-pagination"></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <div class="wrap split">
+        <div class="media frame reveal">
+          <img src="garage1.png" alt="Velonix workshop with a coupé and a motorcycle under blue light strips" loading="lazy">
+        </div>
+        <div class="reveal">
+          <div class="eyebrow">About Velonix</div>
+          <h2>We don't just modify vehicles — we reimagine them.</h2>
+          <p>Our team of engineers, designers, and dreamers brings the future of customization to life. Whether it's performance tuning, a full-body redesign, or futuristic tech integration, we craft machines that define individuality.</p>
+          <ul class="checklist">
+            <li><i class="fas fa-gauge-high"></i><div><b>Performance tuning</b><span>Engines, aero and chassis set up for the way you drive.</span></div></li>
+            <li><i class="fas fa-pen-ruler"></i><div><b>Full-body redesign</b><span>Paint, wheels, lighting and trim — every surface is yours.</span></div></li>
+            <li><i class="fas fa-microchip"></i><div><b>Future tech integration</b><span>Electric and experimental drivetrains, smart cabin systems.</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- LINEUP -->
+    <section id="lineup" class="section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <div class="eyebrow">The Lineup</div>
+            <h2>Pick your platform</h2>
+            <p>Every build starts from a Velonix chassis. Choose one and open it straight in the 3D lab.</p>
+          </div>
+          <a class="text-link" href="Garage.html">View full garage <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="vehicle-grid">
+          <a class="vehicle-card reveal" href="customize.html?model=spectre">
+            <div class="media"><img src="customcar1.png" alt="Velonix Spectre coupé in the workshop with its hood open" loading="lazy"></div>
+            <div class="body">
+              <div class="eyebrow">Grand Touring Coupé</div>
+              <h3>Velonix Spectre</h3>
+              <p class="tag">Twin-turbo, rear-drive, 2+2 seats</p>
+              <dl class="specs"><div><dt>Power hp</dt><dd>510</dd></div><div><dt>0-100</dt><dd>3.9s</dd></div><div><dt>Top km/h</dt><dd>290</dd></div></dl>
+              <div class="foot"><span class="price"><small>From</small>$85,000</span><span class="go">Configure <i class="fas fa-arrow-right"></i></span></div>
+            </div>
+          </a>
+          <a class="vehicle-card reveal" href="customize.html?model=vortex">
+            <div class="media"><img src="front.png" alt="Apex Vortex hypercar seen head-on with glowing headlights" loading="lazy"></div>
+            <div class="body">
+              <div class="eyebrow">Mid-Engine Hypercar</div>
+              <h3>Apex Vortex</h3>
+              <p class="tag">Carbon tub, scissor doors, active aero</p>
+              <dl class="specs"><div><dt>Power hp</dt><dd>820</dd></div><div><dt>0-100</dt><dd>2.6s</dd></div><div><dt>Top km/h</dt><dd>340</dd></div></dl>
+              <div class="foot"><span class="price"><small>From</small>$250,000</span><span class="go">Configure <i class="fas fa-arrow-right"></i></span></div>
+            </div>
+          </a>
+          <a class="vehicle-card reveal" href="customize.html?model=titan">
+            <div class="media"><img src="bike1.png" alt="Titan Edge superbike between two robotic arms" loading="lazy"></div>
+            <div class="body">
+              <div class="eyebrow">Superbike</div>
+              <h3>Titan Edge Bike</h3>
+              <p class="tag">1000cc, carbon wheels, track-tuned</p>
+              <dl class="specs"><div><dt>Power hp</dt><dd>210</dd></div><div><dt>0-100</dt><dd>3.1s</dd></div><div><dt>Top km/h</dt><dd>303</dd></div></dl>
+              <div class="foot"><span class="price"><small>From</small>$45,000</span><span class="go">Configure <i class="fas fa-arrow-right"></i></span></div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div>
+            <div class="eyebrow">Why Velonix</div>
+            <h2>Futuristic features</h2>
+          </div>
+        </div>
+        <div class="feature-grid">
+          <div class="feature-card reveal">
+            <div class="ic"><i class="fas fa-wand-magic-sparkles"></i></div>
+            <h3>3D Design Configurator</h3>
+            <p>Visualize and customize your dream vehicle in real time — paint, wheels, lighting and interior.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="ic"><i class="fas fa-gauge-high"></i></div>
+            <h3>Performance Engineering</h3>
+            <p>Every build is optimized for speed, response and efficiency, with live stats as you go.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="ic"><i class="fas fa-microchip"></i></div>
+            <h3>Smart Systems</h3>
+            <p>Integrated tech for smarter, safer and more interactive rides — from LED signatures to Ion Drive.</p>
+          </div>
+          <div class="feature-card reveal">
+            <div class="ic"><i class="fas fa-fingerprint"></i></div>
+            <h3>Signature Builds</h3>
+            <p>Each Velonix vehicle is a one-of-one creation, designed for those who dare to stand out.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="customize" class="section">
+      <div class="wrap">
+        <div class="cta reveal">
+          <div class="copy">
+            <div class="eyebrow">Configurator Lab</div>
+            <h2>Start your custom build</h2>
+            <p>Choose your vehicle type, style and upgrades — then watch it come to life in the studio with live pricing.</p>
+            <div class="hero-actions">
+              <a class="btn" href="customize.html">Start Customizing <i class="fas fa-arrow-right"></i></a>
+              <a class="btn ghost" href="Garage.html">Browse Garage</a>
+            </div>
+          </div>
+          <div class="media"><img src="truck1.png" alt="Cyberdyne Behemoth in the Velonix workshop with a robotic arm behind it" loading="lazy"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="index.html"><span class="logo">VELONIX</span><span>Customs</span></a>
+          <p>Futuristic vehicle builds, designed in a cinematic 3D studio and engineered by hand.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="Garage.html">Garage</a></li>
+            <li><a href="customize.html">Configurator Lab</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#about">About</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact Velonix Customs</h4>
+          <ul>
+            <li><i class="fas fa-envelope"></i>contact@velonixcustoms.com</li>
+            <li><i class="fas fa-phone"></i>+1 234 567 890</li>
+            <li><i class="fas fa-location-dot"></i>1234 Future Drive, Neon City, Earth</li>
+            <li><i class="fab fa-instagram"></i>@VelonixCustoms</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> Velonix Customs. All rights reserved.</span>
+        <a class="text-link" href="#">Back to top <i class="fas fa-arrow-up"></i></a>
+      </div>
     </div>
-  </section>
-
-  <section id="features" data-aos="fade-up">
-    <h2>Futuristic Features</h2>
-    <div class="features">
-      <div class="feature-card">
-        <h3>AI Design Configurator</h3>
-        <p>Visualize and customize your dream vehicle in real time using our AI-powered design tool.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Performance Engineering</h3>
-        <p>Every build is optimized for unmatched performance, speed, and efficiency.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Smart Systems</h3>
-        <p>Integrated futuristic tech systems for smarter, safer, and more interactive rides.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Signature Builds</h3>
-        <p>Each Velonix vehicle is a one-of-one creation — designed for those who dare to stand out.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="customize" data-aos="fade-up">
-    <h2>Start Your Custom Build</h2>
-    <p style="margin-bottom:30px; font-size:1.2rem; color:#ccc;">Choose your vehicle type, style, and upgrades — let Velonix bring your dream machine to life.</p>
-   <a class="btn-primary" href="customize.html">Start Customizing <span aria-hidden="true">↗</span></a>
-  </section>
-
-  <footer id="contact" data-aos="fade-up">
-    <h3>Contact Velonix Customs</h3>
-    <p>Email: contact@velonixcustoms.com</p>
-    <p>Phone: +1 234 567 890</p>
-    <p>Address: 1234 Future Drive, Neon City, Earth</p>
-    <p>Instagram: @VelonixCustoms</p>
-    <br><p>© 2025 Velonix Customs. All Rights Reserved.</p>
   </footer>
 
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script>const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; AOS.init({duration: reduceMotion ? 0 : 1200, disable: reduceMotion});</script>
-
-  <script src="https://unpkg.com/vanilla-tilt"></script>
-  <script>
-    VanillaTilt.init(document.querySelectorAll(".feature-card, .swiper-slide img"), {
-      max:10, speed:400, glare:true, "max-glare":0.3
-    });
-  </script>
-
-  <script src="https://unpkg.com/swiper@9/swiper-bundle.min.js"></script>
-  <script>
-    const swiper = new Swiper('.swiper', {
-      slidesPerView:1,
-      spaceBetween:30,
-      pagination:{el:'.swiper-pagination',clickable:true},
-      autoplay: reduceMotion ? false : {delay:3000,disableOnInteraction:false},
-      breakpoints:{
-        768:{slidesPerView:2},
-        1200:{slidesPerView:3}
-      }
-    });
-  </script>
-  <script>
-    (function () {
-      var themeKey = 'velonix-theme';
-      var toggle = document.querySelector('[data-theme-toggle]');
-      if (!toggle) return;
-      function applyTheme(theme) {
-        var normalized = theme === 'light' ? 'light' : 'dark';
-        var isLight = normalized === 'light';
-        document.documentElement.dataset.theme = normalized;
-        document.documentElement.style.colorScheme = normalized;
-        try { localStorage.setItem(themeKey, normalized); } catch (error) {}
-        document.cookie = themeKey + '=' + normalized + '; path=/; max-age=31536000; SameSite=Lax';
-        toggle.setAttribute('aria-pressed', String(isLight));
-        toggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
-        toggle.title = isLight ? 'Switch to dark theme' : 'Switch to light theme';
-        toggle.innerHTML = '<span class="theme-icon" aria-hidden="true">' + (isLight ? '☾' : '☼') + '</span><span class="theme-label">' + (isLight ? 'Dark' : 'Light') + '</span>';
-      }
-      toggle.addEventListener('click', function () {
-        applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
-      });
-      applyTheme(document.documentElement.dataset.theme || 'dark');
-    }());
-  </script>
+  <script src="site.js"></script>
 </body>
 </html>

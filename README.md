@@ -19,8 +19,7 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - CSS3
 - JavaScript (ES6)
 - Three.js (3D Rendering)
-- Swiper.js (Carousel)
-- AOS (Animations)
+- Font Awesome (Icons)
 
 ---
 
@@ -51,13 +50,12 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 
 ## 📂 Project Structure
 velonix-car-configurator/
-│── index.html
-│── Garage.html
-│── customize.html
-│
-├── css/
-├── js/
-├── assets/
+│── index.html        # Home page
+│── Garage.html       # Showroom: base chassis + signature builds
+│── customize.html    # 3D configurator lab (self-contained)
+│── site.css          # Shared styles for Home + Garage
+│── site.js           # Shared theme toggle + scroll reveal
+└── *.png             # Vehicle and studio images
 
 
 ---
