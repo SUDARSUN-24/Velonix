@@ -3186,6 +3186,8 @@
     // Sweep a glowing scan plane through the vehicle; materialize also reveals it from the floor up
     function startScan(materialize, delay = 0) {
         if (!fx.box || reduceMotion) return;
+        fx.inside = state.view === 'interior';
+        if (fx.inside && !materialize) return;
         const sz = fx.box.getSize(new THREE.Vector3()), c = fx.box.getCenter(new THREE.Vector3());
         fx.scan.scale.set(sz.x * 1.08 + 0.12, sz.z * 1.08 + 0.12, 1);
         fx.scan.position.set(c.x, fx.box.min.y, c.z);
@@ -3208,21 +3210,21 @@
         fx.scanT = Math.min(1, fx.scanT + dt / fx.scanDur);
         const k = fx.scanT, e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
         const y = lerp(fx.box.min.y - 0.02, fx.box.max.y + 0.08, e);
-        fx.scan.visible = true; fx.scan.position.y = y;
+        fx.scan.visible = state.view !== 'interior'; fx.scan.position.y = y;
         fx.scanMat.opacity = k > 0.82 ? (1 - k) / 0.18 : Math.min(1, k * 8);
         if (fx.materialize) scanClip.constant = y;
         if (k >= 1) { fx.scanT = -1; fx.scan.visible = false; scanClip.constant = 1e4; }
     }
 
-    // Stage readout: frame rate, camera heading, scene
-    let fpsFrames = 0, fpsTime = 0;
+    // Stage readout: camera range and heading, scene
+    let readoutTime = 0;
     function updateReadout(dt) {
-        fpsFrames++; fpsTime += dt;
-        if (fpsTime < 0.5) return;
-        const fps = Math.round(fpsFrames / fpsTime); fpsFrames = 0; fpsTime = 0;
+        readoutTime += dt;
+        if (readoutTime < 0.25) return;
+        readoutTime = 0;
         const off = camera.position.clone().sub(controls.target);
         const heading = (THREE.MathUtils.radToDeg(Math.atan2(off.x, off.z)) + 360) % 360;
-        $('readout').innerHTML = `<span class="live">Live</span><span>FPS <b>${fps}</b></span><span>CAM <b>${heading.toFixed(0).padStart(3, '0')}°</b></span><span>Scene <b>${ENVS[state.env].name}</b></span>`;
+        $('readout').innerHTML = `<span class="live">Live</span><span>Range <b>${off.length().toFixed(1)} m</b></span><span>CAM <b>${heading.toFixed(0).padStart(3, '0')}°</b></span><span>Scene <b>${ENVS[state.env].name}</b></span>`;
     }
 
     // ---------- UI motion helpers ----------
@@ -3445,7 +3447,7 @@
     function updateStats() {
         const m = state.model, eng = choice('engine'), boost = eng.boost, mods = statMods();
         const total = totalPrice();
-        if (rollTo($('totalPrice'), total, fmt)) ping($('totalPrice'));
+        if (rollTo($('totalPrice'), total, fmt)) { const tp = $('totalPrice'); tp.classList.remove('bump'); void tp.offsetWidth; tp.classList.add('bump'); }
         $('monthly').innerHTML = `from <b>${fmt(total / 60 * 1.049)}</b>/mo<br><small>60 months · 4.9% APR</small>`;
         if (fx.titleId !== m.id) {
             fx.titleId = m.id;
