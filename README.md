@@ -4,7 +4,9 @@ An interactive 3D vehicle customization platform that allows users to design and
 
 **🌐 Live demo: [velonixsun.vercel.app](https://velonixsun.vercel.app)**
 
-![Velonix home page](screenshots/home.jpg)
+![Velonix demo: boot intro, hero effects, card tilt and page transition](screenshots/demo.gif)
+
+*Boot intro → hero power-on and 3D tilt → smooth-scroll reveals → card spotlight tilt → neon page transition into the Garage.*
 
 ## 🔥 Overview
 Velonix is a futuristic web-based configurator where users can:
@@ -36,10 +38,15 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - 🌐 Multi-page navigation (Home, Garage, Configurator)
 - 🎥 Interactive 3D rendering with orbit controls
 - 📱 Responsive design
+- ✨ Cinematic motion: boot intro, smooth scrolling, 3D cursor tilt, scroll reveals and neon page transitions
 
 ---
 
 ## 📸 Screenshots
+
+### Home
+
+![Velonix home page](screenshots/home.jpg)
 
 ### 3D Configurator Lab
 Paint, wheels, lighting, interior and engine options with live pricing and performance stats.
