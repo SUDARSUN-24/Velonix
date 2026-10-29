@@ -17,7 +17,7 @@
     document.documentElement.classList.add('js', 'booting');
   </script>
   <title>Velonix Customs | Live 3D Vehicle Studio</title>
-  <meta name="description" content="Velonix Customs: futuristic cars, bikes and trucks in a live 3D studio. Spin them, race them in Launch Control, then build yours in the Lab.">
+  <meta name="description" content="Velonix Customs: futuristic cars, bikes and trucks in a live 3D studio. Spin them, rev them in the Engine Room, then build yours in the Lab.">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,7 +47,7 @@
     <a class="brand" href="index.html"><span class="logo">VELONIX</span><span>Customs</span></a>
     <nav class="site-nav" aria-label="Main">
       <a href="#about">About</a>
-      <a href="#launch">Launch Control</a>
+      <a href="#engine">Engine Room</a>
       <a href="#lab">The Lab</a>
     </nav>
     <div class="head-actions">
@@ -61,7 +61,7 @@
   <nav class="rail" aria-label="Sections">
     <a href="#top" data-for="hero"><span>Studio</span></a>
     <a href="#about" data-for="about"><span>About</span></a>
-    <a href="#launch" data-for="launch"><span>Launch</span></a>
+    <a href="#engine" data-for="engine"><span>Engine</span></a>
     <a href="#lab" data-for="lab"><span>The Lab</span></a>
   </nav>
 
@@ -75,10 +75,10 @@
           <span class="line split-text">Build the</span>
           <span class="line split-text outline">impossible</span>
         </h1>
-        <p class="lead intro" style="--d:.7s">Five machines from the Velonix studio, rendered live. Spin them, switch between them, then take one for a launch run.</p>
+        <p class="lead intro" style="--d:.7s">Five machines from the Velonix studio, rendered live. Spin them, switch between them, then open the throttle.</p>
         <div class="hero-actions intro" style="--d:.85s">
           <a class="btn" href="customize.html" data-build-link><span>Configure <span data-model-short>Spectre</span></span> <i class="fas fa-arrow-right"></i></a>
-          <a class="btn ghost" href="#launch"><i class="fas fa-flag-checkered"></i> Launch it</a>
+          <a class="btn ghost" href="#engine"><i class="fas fa-volume-high"></i> Rev it</a>
         </div>
       </div>
 
@@ -132,45 +132,53 @@
       </div>
     </section>
 
-    <!-- 02 LAUNCH CONTROL (mini-game) -->
-    <section class="chapter" id="launch" data-chapter="launch" data-side="right">
-      <div class="panel launch" data-launch>
+    <!-- 02 ENGINE ROOM -->
+    <section class="chapter" id="engine" data-chapter="engine" data-side="right">
+      <div class="panel engine" data-engine>
         <div class="num" aria-hidden="true">02</div>
-        <div class="eyebrow">Launch Control</div>
-        <h2>Beat the <br>factory time.</h2>
-        <p class="how">Hold to rev. Keep the needle in the <b class="g">green zone</b> when the light turns green, then tap when <b class="s">SHIFT</b> flashes.</p>
+        <div class="eyebrow">Engine Room</div>
+        <h2>Max it <br>out.</h2>
+        <p class="how">Hold to rev and bounce it off the limiter. Lift off for the crackle. Then turn the volume all the way up.</p>
 
-        <div class="lc-top">
-          <div class="tree" data-lc-tree aria-hidden="true"><i></i><i></i><i></i><i class="go"></i></div>
-          <div class="lc-car"><b data-lc-model>Velonix Spectre</b><small>Factory 0–100 <em data-lc-factory>3.9 s</em> · Best <em data-lc-best>—</em></small></div>
-          <button class="mute" type="button" data-lc-mute aria-pressed="false" title="Mute engine sound"><i class="fas fa-volume-high"></i></button>
+        <div class="en-top">
+          <div class="en-car"><b data-en-model>Velonix Spectre</b><small data-en-spec>V8 · redline 8,200 rpm</small></div>
+          <label class="vol" title="Volume">
+            <i class="fas fa-volume-high" data-en-volicon></i>
+            <input type="range" min="0" max="100" step="1" value="80" data-en-vol aria-label="Volume">
+            <em data-en-volval>80</em>
+          </label>
         </div>
 
         <div class="gauge">
           <svg viewBox="0 22 200 96" aria-hidden="true">
             <path class="track" d="M20 110 A80 80 0 0 1 180 110"></path>
-            <path class="zone" data-lc-zone></path>
-            <path class="redline" data-lc-red></path>
-            <g class="ticks" data-lc-ticks></g>
-            <g data-lc-needle><line class="needle" x1="100" y1="110" x2="100" y2="38"></line></g>
+            <path class="redline" data-en-red></path>
+            <g class="ticks" data-en-ticks></g>
+            <g data-en-needle><line class="needle" x1="100" y1="110" x2="100" y2="38"></line></g>
             <circle class="hub" cx="100" cy="110" r="6"></circle>
           </svg>
-          <div class="shift-light" data-lc-shift>Shift</div>
-          <div class="readouts">
-            <div><b data-lc-speed>0</b><small>km/h</small></div>
-            <div><b data-lc-time>0.00</b><small>sec</small></div>
-            <div><b data-lc-gear>N</b><small>gear</small></div>
-          </div>
+          <div class="limit-light" data-en-limit>Limiter</div>
+          <div class="pops" data-en-pops aria-hidden="true"></div>
         </div>
+        <div class="readouts">
+          <div><b data-en-rpm>0</b><small>rpm</small></div>
+          <div><b data-en-peak>0</b><small>peak</small></div>
+          <div><b data-en-db>0</b><small>dB</small></div>
+        </div>
+        <div class="meter" data-en-meter aria-hidden="true"></div>
 
-        <button class="btn big lc-btn" type="button" data-lc-btn>Hold to rev</button>
-        <div class="lc-result" data-lc-result aria-live="polite"></div>
-        <div class="lc-models" role="group" aria-label="Launch vehicle">
-          <button type="button" data-lc-pick="spectre">Spectre</button>
-          <button type="button" data-lc-pick="vortex">Vortex</button>
-          <button type="button" data-lc-pick="behemoth">Behemoth</button>
-          <button type="button" data-lc-pick="hauler">Hauler</button>
-          <button type="button" data-lc-pick="titan">Titan</button>
+        <button class="btn big rev-btn" type="button" data-en-rev><i class="fas fa-power-off"></i> <span>Hold to rev</span></button>
+        <div class="en-actions">
+          <button type="button" data-en-act="horn"><i class="fas fa-bullhorn"></i><span>Horn</span><kbd>H</kbd></button>
+          <button type="button" data-en-act="flash"><i class="fas fa-lightbulb"></i><span>Flash</span><kbd>F</kbd></button>
+          <button type="button" data-en-act="burnout"><i class="fas fa-fire"></i><span>Burnout</span><kbd>B</kbd></button>
+        </div>
+        <div class="en-models" role="group" aria-label="Vehicle">
+          <button type="button" data-en-pick="spectre">Spectre</button>
+          <button type="button" data-en-pick="vortex">Vortex</button>
+          <button type="button" data-en-pick="behemoth">Behemoth</button>
+          <button type="button" data-en-pick="hauler">Hauler</button>
+          <button type="button" data-en-pick="titan">Titan</button>
         </div>
       </div>
     </section>

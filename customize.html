@@ -3512,7 +3512,7 @@
     // az/el in radians around the vehicle, dist as a multiple of the framing distance,
     // ty lifts the look-at point (x fit radius), x/y slide the vehicle across the screen (fraction of width/height)
     const show = { az: 0.85, el: 0.2, dist: 1, ty: 0, x: 0, y: 0, drift: 0.1, scrub: 0, ox: 0, oy: 0, cur: null };
-    // short-lived camera effects layered on top of the goal (Home's Launch Control): zoom, dip and shake
+    // short-lived camera effects layered on top of the goal (Home's Engine Room): zoom, dip and shake
     const kick = { dist: 1, el: 0, shake: 0, speed: 0 };  // speed slides the floor grid past the vehicle
     const TAU = Math.PI * 2;
     const nearAz = (a, ref) => a + TAU * Math.round((ref - a) / TAU);

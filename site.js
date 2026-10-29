@@ -13,13 +13,13 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  // Kept here too so the page (and Launch Control) works before or without the 3D studio
+  // Kept here too so the page (and the Engine Room) works before or without the 3D studio
   const MODELS = {
-    spectre:  { name: 'Velonix Spectre',    short: 'Spectre',  type: 'car',   zero: 3.9 },
-    vortex:   { name: 'Apex Vortex',        short: 'Vortex',   type: 'car',   zero: 2.6 },
-    behemoth: { name: 'Cyberdyne Behemoth', short: 'Behemoth', type: 'car',   zero: 4.1 },
-    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck', zero: 11.8, est: true },  // no factory figure in the Lab, so an estimate
-    titan:    { name: 'Titan Edge Bike',    short: 'Titan',    type: 'bike',  zero: 3.1 }
+    spectre:  { name: 'Velonix Spectre',    short: 'Spectre',  type: 'car' },
+    vortex:   { name: 'Apex Vortex',        short: 'Vortex',   type: 'car' },
+    behemoth: { name: 'Cyberdyne Behemoth', short: 'Behemoth', type: 'car' },
+    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck' },
+    titan:    { name: 'Titan Edge Bike',    short: 'Titan',    type: 'bike' }
   };
   const ORDER = Object.keys(MODELS);
 
@@ -27,12 +27,12 @@
   const PRESETS = {
     hero:   { az: 0.85, el: 0.23, dist: 1.0,  ty: 0, x: 0.19, y: 0.03, drift: 0.1 },
     about:  { az: 1.2,  el: 0.24, dist: 1.1,  ty: 0, x: 0.2,  y: 0,    drift: 0.05 },
-    launch: { az: 0.02, el: 0.1,  dist: 1.3,  ty: 0, x: -0.2, y: 0.02, drift: 0 },
+    engine: { az: 0.5,  el: 0.07, dist: 1.2,  ty: 0, x: -0.2, y: 0.02, drift: 0.03 },
     lab:    { az: -2.3, el: 0.2,  dist: 1.15, ty: 0, x: 0.26, y: 0,    drift: 0.08 }
   };
   const MOBILE = {
     hero: { x: 0, y: 0.15 },
-    about: { x: 0, y: -0.2 }, launch: { x: 0, y: -0.3, dist: 1.75 }, lab: { x: 0, y: -0.22 }
+    about: { x: 0, y: -0.2 }, engine: { x: 0, y: -0.3, dist: 1.6 }, lab: { x: 0, y: -0.22 }
   };
   const TYPE_DIST = { bike: 1.3 };  // the bike's fit radius is tall for its length, so pull back a little
   const RAIL_MS = 9000;
@@ -136,7 +136,7 @@
     const p = Object.assign({}, PRESETS[name], isMobile() ? MOBILE[name] : null);
     if (p.dist) p.dist *= TYPE_DIST[MODELS[modelId].type] || 1;
     V.show(p);
-    V.set(LC.busy() ? { env: themeEnv() } : { env: themeEnv(), lights: 'drl', drive: false });
+    V.set(EN.busy() ? { env: themeEnv() } : { env: themeEnv(), lights: 'drl', drive: false });
   }
 
   /* ---------- text effects ---------- */
@@ -182,10 +182,10 @@
     }
     $$('[data-model-short]').forEach(el => el.textContent = MODELS[modelId].short);
     $$('.model-rail button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.model === modelId)));
-    LC.onModel();
+    EN.onModel();
   }
   function setModel(id) {
-    if (id === modelId || LC.busy()) return;
+    if (id === modelId) return;
     modelId = id;
     railP = 0;
     if (V) V.setModel(V.models.find(m => m.id === id));
@@ -193,207 +193,279 @@
   }
   $$('.model-rail button').forEach(b => b.addEventListener('click', () => { railStopped = true; setModel(b.dataset.model); }));
 
-  /* ---------- Launch Control: rev, launch on green, shift on the light ---------- */
-  const LC = (() => {
-    const box = $('[data-launch]');
-    const q = k => $(`[data-lc-${k}]`, box);
-    const btn = q('btn'), needle = q('needle'), lights = $$('[data-lc-tree] i', box), shiftLight = q('shift');
-    const MAX = 9000, ZONE = [5200, 7000], SHIFT_AT = 7800, LIMIT = 8600, IDLE = 900;
-    const GEARS = [0, 0.36, 0.68, 1];   // 0-100 split across three gears
-    const PITCH = { car: 1, truck: 0.55, bike: 1.45 };
-    let st = 'idle', rpm = IDLE, throttle = false, timers = [], run = null;
-    let muted = store.get('velonix-sound-off', false);
+  /* ---------- Engine Room: free-rev the engine, crackle on lift-off, horn, light flash, burnout ---------- */
+  const EN = (() => {
+    const box = $('[data-engine]');
+    const q = k => $(`[data-en-${k}]`, box);
+    const btn = q('rev'), needle = q('needle'), limitLight = q('limit'), pops = q('pops'), vol = q('vol');
+    // cyl sets the firing note (rpm / 60 * cyl / 2); up is how fast it spins up under throttle
+    const ENGINES = {
+      spectre:  { label: 'Twin-turbo V8',   cyl: 8,  idle: 850,  limit: 7800,  max: 9000,  step: 1000, up: 2.6 },
+      vortex:   { label: 'V12',             cyl: 12, idle: 1000, limit: 9200,  max: 10000, step: 1000, up: 3.4 },
+      behemoth: { label: 'Supercharged V8', cyl: 8,  idle: 750,  limit: 6800,  max: 8000,  step: 1000, up: 2.0 },
+      hauler:   { label: 'Inline-6 diesel', cyl: 6,  idle: 600,  limit: 2300,  max: 3000,  step: 500,  up: 1.5 },
+      titan:    { label: 'Inline-4',        cyl: 4,  idle: 1300, limit: 13000, max: 14000, step: 2000, up: 4.6 }
+    };
+    const SEGMENTS = 18;
+    let eng = ENGINES[modelId];
+    let rpm = 0, peak = 0, throttle = false, started = false, burn = 0, crackle = 0, limitT = 0, level = 0, db = 0;
+    let volume = store.get('velonix-volume', 70);
 
-    // gauge geometry: 0 rpm on the left, MAX on the right, over the top
-    const pt = (r, rad = 80) => { const a = Math.PI * (1 - r / MAX); return [100 + rad * Math.cos(a), 110 - rad * Math.sin(a)]; };
-    const arc = (a, b) => { const [x0, y0] = pt(a), [x1, y1] = pt(b); return `M${x0.toFixed(1)} ${y0.toFixed(1)} A80 80 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
-    q('zone').setAttribute('d', arc(ZONE[0], ZONE[1]));
-    q('red').setAttribute('d', arc(8000, MAX));
-    q('ticks').innerHTML = Array.from({ length: 10 }, (_, i) => {
-      const [x0, y0] = pt(i * 1000, 72), [x1, y1] = pt(i * 1000, 80), [tx, ty] = pt(i * 1000, 60);
-      return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"></line><text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}">${i}</text>`;
-    }).join('');
+    meter();
+    function meter() {
+      const m = q('meter');
+      m.innerHTML = Array.from({ length: SEGMENTS }, (_, i) => `<i class="${i >= SEGMENTS - 3 ? 'r' : i >= SEGMENTS - 7 ? 'a' : ''}"></i>`).join('');
+    }
+    const segs = $$('[data-en-meter] i', box);
 
-    /* engine note: two detuned oscillators through a resonant low-pass, pitched by rpm */
+    function buildGauge() {
+      const M = eng.max;
+      const pt = (r, rad) => { const a = Math.PI * (1 - r / M); return [100 + rad * Math.cos(a), 110 - rad * Math.sin(a)]; };
+      const [x0, y0] = pt(eng.limit, 80), [x1, y1] = pt(M, 80);
+      q('red').setAttribute('d', `M${x0.toFixed(1)} ${y0.toFixed(1)} A80 80 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`);
+      let h = '';
+      for (let v = 0; v <= M; v += eng.step) {
+        const [a0, b0] = pt(v, 72), [a1, b1] = pt(v, 80), [tx, ty] = pt(v, 60), k = v / 1000;
+        h += `<line x1="${a0.toFixed(1)}" y1="${b0.toFixed(1)}" x2="${a1.toFixed(1)}" y2="${b1.toFixed(1)}"></line><text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}">${Number.isInteger(k) ? k : k.toFixed(1)}</text>`;
+      }
+      q('ticks').innerHTML = h;
+    }
+
+    /* sound: firing note + sub octave + upper partial through a soft clipper and resonant low-pass,
+       then volume -> compressor so MAX is loud without clipping. Noise covers crackle and tyre screech. */
+    const clipCurve = k => { const n = 1024, a = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; a[i] = Math.tanh(k * x) / Math.tanh(k); } return a; };
     const sound = {
       ctx: null,
       init() {
-        if (this.ctx || muted) { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); return; }
+        if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
         const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
         const c = this.ctx = new AC();
-        this.out = c.createGain(); this.out.gain.value = 0;
+        this.master = c.createGain(); this.master.gain.value = 0;
+        const comp = c.createDynamicsCompressor(); comp.threshold.value = -12; comp.ratio.value = 8;
+        this.master.connect(comp); comp.connect(c.destination);
+        const shaper = c.createWaveShaper(); shaper.curve = clipCurve(4); shaper.oversample = '2x';
         this.lp = c.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.Q.value = 5;
-        this.a = c.createOscillator(); this.a.type = 'sawtooth';
-        this.b = c.createOscillator(); this.b.type = 'square';
-        const half = c.createGain(); half.gain.value = 0.5;
-        this.a.connect(this.lp); this.b.connect(half); half.connect(this.lp);
-        this.lp.connect(this.out); this.out.connect(c.destination);
-        this.a.start(); this.b.start();
+        this.eng = c.createGain(); this.eng.gain.value = 0;
+        this.oscs = [['sawtooth', 1, 0.6], ['square', 0.5, 0.5], ['sawtooth', 2.01, 0.2]].map(([type, mul, gain]) => {
+          const o = c.createOscillator(), g = c.createGain(); o.type = type; g.gain.value = gain;
+          o.connect(g); g.connect(shaper); o.start(); return { o, mul };
+        });
+        shaper.connect(this.lp); this.lp.connect(this.eng); this.eng.connect(this.master);
+        const buf = this.noise = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+        this.screechF = c.createBiquadFilter(); this.screechF.type = 'bandpass'; this.screechF.Q.value = 7;
+        this.screech = c.createGain(); this.screech.gain.value = 0;
+        src.connect(this.screechF); this.screechF.connect(this.screech); this.screech.connect(this.master); src.start();
+        this.setVolume();
       },
+      setVolume() { if (this.ctx) this.master.gain.setTargetAtTime(Math.pow(volume / 100, 1.6) * 1.8, this.ctx.currentTime, 0.05); },
       update(load, on) {
         if (!this.ctx) return;
-        const t = this.ctx.currentTime, f = (16 + rpm * 0.048) * (PITCH[MODELS[modelId].type] || 1);
-        this.a.frequency.setTargetAtTime(f, t, 0.03);
-        this.b.frequency.setTargetAtTime(f * 0.501, t, 0.03);
-        this.lp.frequency.setTargetAtTime(260 + rpm * 0.22 + load * 700, t, 0.05);
-        this.out.gain.setTargetAtTime(on && !muted ? 0.03 + load * 0.035 : 0, t, on ? 0.06 : 0.25);
+        const t = this.ctx.currentTime, f = rpm / 60 * eng.cyl / 2;
+        this.oscs.forEach(({ o, mul }) => o.frequency.setTargetAtTime(Math.max(18, f * mul), t, 0.02));
+        this.lp.frequency.setTargetAtTime(260 + f * 2.4 + load * 2000, t, 0.04);
+        this.eng.gain.setTargetAtTime(on ? 0.14 + load * 0.2 : 0, t, on ? 0.05 : 0.35);
+        this.screech.gain.setTargetAtTime(burn > 0 ? 0.3 : 0, t, 0.08);
+        this.screechF.frequency.setTargetAtTime(2300 + Math.sin(t * 11) * 600, t, 0.05);
+      },
+      pop(strength) {
+        const c = this.ctx; if (!c) return;
+        const t = c.currentTime, s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+        s.buffer = this.noise; bp.type = 'bandpass'; bp.frequency.value = 350 + Math.random() * 900; bp.Q.value = 1.1;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(strength, t + 0.004); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05 + Math.random() * 0.07);
+        s.connect(bp); bp.connect(g); g.connect(this.master); s.start(t, Math.random() * 0.8, 0.15);
+      },
+      horn(on) {
+        const c = this.ctx; if (!c) return;
+        const t = c.currentTime;
+        if (on && !this.hornNodes) {
+          const type = MODELS[modelId].type, tones = { car: [415, 523], truck: [185, 233, 277], bike: [554, 698] }[type];
+          const g = c.createGain(), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600;
+          g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.2, t + 0.02);
+          const os = tones.map(fr => { const o = c.createOscillator(); o.type = type === 'truck' ? 'sawtooth' : 'square'; o.frequency.value = fr; o.connect(lp); o.start(); return o; });
+          lp.connect(g); g.connect(this.master);
+          this.hornNodes = { g, os };
+        } else if (!on && this.hornNodes) {
+          const { g, os } = this.hornNodes; this.hornNodes = null;
+          g.gain.setTargetAtTime(0, t, 0.03); os.forEach(o => o.stop(t + 0.25));
+        }
       }
     };
-    const muteBtn = q('mute');
-    function paintMute() {
-      muteBtn.setAttribute('aria-pressed', String(muted));
-      muteBtn.title = muted ? 'Turn engine sound on' : 'Mute engine sound';
-      muteBtn.innerHTML = `<i class="fas ${muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>`;
-    }
-    paintMute();
-    muteBtn.addEventListener('click', () => { muted = !muted; store.set('velonix-sound-off', muted); paintMute(); if (!muted) sound.init(); });
 
-    function setLights(n, go = false) {
-      lights.forEach((l, i) => l.className = i < 3 ? (i < n ? 'on' : '') : (go ? 'go on' : 'go'));
+    function label(text, icon) { btn.innerHTML = `<i class="fas ${icon}"></i> <span>${text}</span>`; }
+    function paintVolume() {
+      vol.value = volume;
+      vol.style.setProperty('--v', volume + '%');
+      q('volval').textContent = volume >= 100 ? 'MAX' : volume;
+      q('volicon').className = 'fas ' + (volume === 0 ? 'fa-volume-xmark' : volume < 45 ? 'fa-volume-low' : 'fa-volume-high');
+      box.classList.toggle('maxed', volume >= 100);
     }
-    function label(text) { btn.textContent = text; }
-    function result(html) { q('result').innerHTML = html; }
-    const zeroFor = id => MODELS[id].zero;
+    vol.addEventListener('input', () => { volume = +vol.value; store.set('velonix-volume', volume); paintVolume(); sound.init(); sound.setVolume(); });
+    paintVolume();
 
     function start() {
-      st = 'stage'; run = null;
-      timers.forEach(clearTimeout); timers = [];
-      setLights(0); result(''); label('Keep it in the green');
-      q('speed').textContent = '0'; q('time').textContent = '0.00'; q('gear').textContent = 'N';
-      box.classList.add('live');
-      const green = 1500 + 500 + Math.random() * 700;
-      [500, 1000, 1500].forEach((ms, i) => timers.push(setTimeout(() => setLights(i + 1), ms)));
-      timers.push(setTimeout(go, green));
+      started = true;
+      rpm = Math.max(rpm, eng.idle * 0.3);
+      box.classList.add('running');
+      label('Hold to rev', 'fa-gauge-high');
+      if (V) V.set({ lights: 'on' });
     }
-    function go() {
-      setLights(3, true);
-      let factor, note;
-      if (rpm >= ZONE[0] && rpm <= ZONE[1]) { factor = 0.97; note = 'Perfect launch'; }
-      else if (rpm < ZONE[0]) { factor = 1 + (ZONE[0] - rpm) / ZONE[0] * 0.7; note = rpm < 2500 ? 'Stalled off the line' : 'Bogged down'; }
-      else { factor = 1 + (rpm - ZONE[1]) / (MAX - ZONE[1]) * 0.35; note = 'Wheelspin'; }
-      run = { T: zeroFor(modelId) * factor, p: 0, gear: 1, elapsed: 0, penalty: 0, stall: 0, launchRpm: rpm, notes: [note] };
-      st = 'run';
-      label('Tap to shift');
-      flash(note, factor <= 0.97);
-      if (V) V.set({ drive: true, driveRate: 0.6, lights: 'on' });
+    function stop() {
+      started = false; throttle = false; crackle = 0;
+      if (burn > 0) endBurnout();
+      sound.horn(false);
+      box.classList.remove('running');
+      btn.classList.remove('held');
+      $$('[data-en-act]', box).forEach(b => b.classList.remove('on'));
+      label('Start & rev', 'fa-power-off');
+      if (V) { V.set({ lights: 'drl', drive: false, driveRate: 1 }); V.kick({ dist: 1, el: 0, shake: 0, speed: 0 }); }
     }
-    function shift(auto) {
-      if (!run || run.gear >= 3) return;
-      const b0 = GEARS[run.gear - 1], b1 = GEARS[run.gear], f = (run.p - b0) / (b1 - b0);
-      if (!auto && f < 0.8) { run.penalty += (b1 - run.p) * run.T * 0.35; flash('Early shift', false); run.notes.push('early shift'); }
-      else if (auto) { flash('Missed shift', false); run.notes.push('missed shift'); }
-      else flash('Clean shift', true);
-      run.gear++; run.stall = 0;
-      shiftLight.classList.remove('on');
-      q('gear').textContent = run.gear;
-    }
-    function finish() {
-      st = 'done';
-      const total = run.elapsed + run.penalty, factory = zeroFor(modelId);
-      const rating = total <= factory * 0.99 ? 'Legend' : total <= factory * 1.06 ? 'Pro' : total <= factory * 1.25 ? 'Street' : 'Rookie';
-      const bests = store.get('velonix-lc-best', {}), prev = bests[modelId];
-      const isBest = !prev || total < prev;
-      if (isBest) { bests[modelId] = +total.toFixed(2); store.set('velonix-lc-best', bests); }
-      q('time').textContent = total.toFixed(2);
-      result(`<b>${total.toFixed(2)} s</b><span class="rank r-${rating.toLowerCase()}">${rating}</span>${isBest ? '<span class="pb">New best</span>' : ''}<small>${run.notes[0]}${run.notes.length > 1 ? ' · ' + run.notes.slice(1).join(' · ') : ''} · factory ${factory.toFixed(1)} s</small>`);
-      label('Hold to go again');
-      box.classList.remove('live');
-      setTimeout(() => { if (st === 'done') setLights(0); }, 1600);
-      calm();
-      paintBest();
-    }
-    function calm() {
-      shiftLight.classList.remove('on');
-      if (V) { V.set({ drive: false, driveRate: 1, lights: 'drl' }); V.kick({ dist: 1, el: 0, shake: 0, speed: 0 }); }
-    }
-    function abort() {
-      if (st !== 'stage' && st !== 'run') return;
-      timers.forEach(clearTimeout); timers = [];
-      st = 'idle'; run = null; throttle = false;
-      setLights(0); label('Hold to rev'); result('');
-      box.classList.remove('live');
-      calm();
-    }
-    let flashT;
-    function flash(text, good) {
-      const r = q('result');
-      if (st === 'done') return;
-      r.innerHTML = `<span class="flash ${good ? 'good' : 'bad'}">${text}</span>`;
-      clearTimeout(flashT); flashT = setTimeout(() => { if (st === 'run') r.innerHTML = ''; }, 900);
-    }
-    function paintBest() {
-      const b = store.get('velonix-lc-best', {})[modelId];
-      q('best').textContent = b ? b.toFixed(2) + ' s' : '—';
-    }
-
     function press() {
       sound.init();
-      if (st === 'idle' || st === 'done') start();
-      if (st === 'run' && run.elapsed > 0.3) shift(false);  // a press right at green is still the launch, not a shift
+      if (!started) start();
       throttle = true;
       btn.classList.add('held');
     }
-    function release() { throttle = false; btn.classList.remove('held'); sound.init(); }
-    // Mobile browsers only unlock audio on pointerup/touchend/keydown, so open it on the first such gesture anywhere
-    const unlock = () => { if (muted) return; sound.init(); ['pointerup', 'touchend', 'keydown'].forEach(t => removeEventListener(t, unlock, true)); };
-    ['pointerup', 'touchend', 'keydown'].forEach(t => addEventListener(t, unlock, true));
-    // rAF stops in a background tab, so stop the run and the engine note with it
-    document.addEventListener('visibilitychange', () => { if (document.hidden) { abort(); if (sound.ctx) sound.ctx.suspend(); } });
+    function release() {
+      if (throttle && rpm > eng.limit * 0.55) crackle = 0.45 + rpm / eng.limit * 0.6;
+      throttle = false;
+      btn.classList.remove('held');
+      sound.init();
+    }
+
+    function popText(big) {
+      if (pops.childElementCount > 5) return;
+      const w = ['POP', 'BANG', 'CRACK', 'BRAP'][(Math.random() * 4) | 0];
+      const el = document.createElement('span');
+      el.textContent = w;
+      el.style.cssText = `left:${10 + Math.random() * 80}%;top:${10 + Math.random() * 55}%;--r:${(Math.random() * 40 - 20).toFixed(0)}deg;--s:${big ? 1.25 : 0.9}`;
+      pops.appendChild(el);
+      setTimeout(() => el.remove(), 650);
+    }
+    function crack(strength) { sound.pop(strength); if (!reduce || Math.random() < 0.3) popText(strength > 0.7); }
+
+    let flashing = 0;
+    function flash() {
+      if (!V || flashing) return;
+      const base = started ? 'on' : 'drl';
+      ['off', 'on', 'off', 'on', 'off', base].forEach((l, i) => { flashing++; setTimeout(() => { flashing--; V.set({ lights: l }); }, i * 95); });
+    }
+    function burnout() {
+      sound.init();
+      if (!started) start();
+      burn = 2.8;
+      $('[data-en-act="burnout"]', box).classList.add('on');
+      if (V) V.set({ drive: true, driveRate: 5 });
+    }
+    function endBurnout() {
+      burn = 0;
+      crackle = 0.9;
+      $('[data-en-act="burnout"]', box).classList.remove('on');
+      if (V) V.set({ drive: false, driveRate: 1 });
+    }
+    function act(name, down) {
+      if (name === 'horn') {
+        sound.init();
+        sound.horn(down);
+        $('[data-en-act="horn"]', box).classList.toggle('on', down);
+      } else if (down && name === 'flash') flash();
+      else if (down && name === 'burnout' && burn <= 0) burnout();
+    }
 
     btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture(e.pointerId); press(); });
     btn.addEventListener('pointerup', release);
     btn.addEventListener('pointercancel', release);
     btn.addEventListener('lostpointercapture', release);
     btn.addEventListener('contextmenu', e => e.preventDefault());
-    // keyboard: Space/Enter on the button, or Space anywhere while the section is on screen (vehicle chips included)
-    addEventListener('keydown', e => {
-      if (e.repeat || !(e.code === 'Space' || (e.code === 'Enter' && document.activeElement === btn))) return;
-      if (document.activeElement !== btn && (chapter !== 'launch' || (e.target.closest('input, textarea, select, a, button') && !e.target.closest('[data-lc-pick]')))) return;
-      e.preventDefault(); press();
+    $$('[data-en-act]', box).forEach(b => {
+      const name = b.dataset.enAct;
+      b.addEventListener('pointerdown', e => { e.preventDefault(); if (name === 'horn') b.setPointerCapture(e.pointerId); act(name, true); });
+      if (name === 'horn') ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => b.addEventListener(t, () => act('horn', false)));
+      b.addEventListener('contextmenu', e => e.preventDefault());
+      b.addEventListener('keydown', e => { if (e.code === 'Enter') { e.preventDefault(); if (!e.repeat) act(name, true); } });
+      b.addEventListener('keyup', e => { if (e.code === 'Enter') act(name, false); });
     });
-    addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'Enter') release(); });
-    $$('[data-lc-pick]', box).forEach(b => b.addEventListener('click', () => setModel(b.dataset.lcPick)));
+    $$('[data-en-pick]', box).forEach(b => b.addEventListener('click', () => setModel(b.dataset.enPick)));
+
+    // keyboard while the section is on screen: Space revs, H horn, F flash, B burnout
+    const KEYS = { KeyH: 'horn', KeyF: 'flash', KeyB: 'burnout' };
+    addEventListener('keydown', e => {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || (chapter !== 'engine' && !box.contains(document.activeElement))) return;
+      if (e.target.closest('textarea, input:not([type=range])')) return;
+      if (e.code === 'Space') {
+        if (e.target.closest('a, button, input') && !box.contains(e.target)) return;
+        e.preventDefault(); press();
+      } else if (KEYS[e.code]) act(KEYS[e.code], true);
+    });
+    addEventListener('keyup', e => {
+      if (e.code === 'Space') release();
+      if (e.code === 'KeyH') act('horn', false);
+    });
+
+    // Mobile browsers only unlock audio on pointerup/touchend/keydown, so open it on the first such gesture anywhere
+    const unlock = () => { sound.init(); ['pointerup', 'touchend', 'keydown'].forEach(t => removeEventListener(t, unlock, true)); };
+    ['pointerup', 'touchend', 'keydown'].forEach(t => addEventListener(t, unlock, true));
+    // rAF stops in a background tab, so switch the engine off with it
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { if (started) stop(); if (sound.ctx) sound.ctx.suspend(); } });
 
     function tick(dt) {
-      let load = 0;
-      if (st === 'stage' || st === 'idle' || st === 'done') {
-        const target = throttle && st === 'stage' ? LIMIT + 300 : IDLE;
-        rpm += (target - rpm) * (target > rpm ? 1.8 : 1.4) * dt;
-        if (rpm >= LIMIT) rpm = LIMIT - 250 - Math.random() * 300;
-        load = st === 'stage' && throttle ? 1 : 0;
-        if (V && st === 'stage' && !reduce) V.kick({ shake: 0.002 + rpm / MAX * 0.008 });
-      } else if (st === 'run') {
-        run.elapsed += dt;
-        const b0 = GEARS[run.gear - 1], b1 = GEARS[run.gear];
-        if (run.p < b1) run.p = Math.min(b1, run.p + dt / run.T);
-        else if (run.gear < 3) { run.stall += dt; if (run.stall > 1.1) shift(true); }
-        const f = (run.p - b0) / (b1 - b0);
-        const from = run.gear === 1 ? Math.max(3200, run.launchRpm * 0.75) : 5300;
-        rpm = run.p >= b1 && run.gear < 3 ? LIMIT - Math.random() * 380 : from + (SHIFT_AT + 200 - from) * f;
-        shiftLight.classList.toggle('on', run.gear < 3 && f > 0.8);
-        q('speed').textContent = Math.round(100 * run.p);
-        q('time').textContent = (run.elapsed + run.penalty).toFixed(2);
-        if (run.gear === 1) q('gear').textContent = '1';
-        load = 1;
-        if (V) {
-          V.set({ driveRate: 0.6 + run.p * 3.2 });
-          V.kick(reduce ? { dist: 1 - 0.14 * run.p, speed: 4 + run.p * 16 } : { dist: 1 - 0.14 * run.p, el: -0.035, shake: 0.004 + (1 - run.p) * 0.01, speed: 4 + run.p * 16 });
-        }
-        if (run.p >= 1) finish();
+      if (started && chapter !== 'engine') stop();
+      let target = started ? eng.idle : 0;
+      if (started && throttle) target = eng.limit * 1.08;
+      if (burn > 0) {
+        burn -= dt;
+        target = eng.limit * (0.86 + Math.sin(performance.now() / 85) * 0.06);
+        if (burn <= 0) endBurnout();
       }
-      needle.setAttribute('transform', `rotate(${(rpm / MAX * 180 - 90).toFixed(2)} 100 110)`);
-      box.classList.toggle('in-zone', st === 'stage' && rpm >= ZONE[0] && rpm <= ZONE[1]);
-      sound.update(load, st === 'stage' || st === 'run' || rpm > IDLE + 150);
+      rpm += (target - rpm) * Math.min(1, (target > rpm ? eng.up : 1.6) * dt);
+      if (rpm >= eng.limit) {
+        // limiter: cut and bounce, with a bang now and then
+        rpm = eng.limit * (0.93 + Math.random() * 0.03);
+        limitT = 0.14;
+        if (Math.random() < 0.35) crack(0.5);
+      }
+      limitT -= dt;
+      if (crackle > 0) {
+        crackle -= dt;
+        if (Math.random() < dt * 16) crack(0.35 + Math.random() * 0.6);
+      }
+      if (rpm < 5 && !started) rpm = 0;
+      peak = Math.max(peak, rpm);
+
+      const frac = rpm / eng.limit, load = started && (throttle || burn > 0) ? 1 : 0;
+      level += ((started ? (volume / 100) * (0.28 + 0.72 * Math.min(1, frac)) : 0) - level) * Math.min(1, dt * 10);
+      db += ((started && volume ? 42 + level * 76 : 0) - db) * Math.min(1, dt * 8);
+      sound.update(load, started);
+
+      needle.setAttribute('transform', `rotate(${(Math.min(rpm, eng.max) / eng.max * 180 - 90).toFixed(2)} 100 110)`);
+      limitLight.classList.toggle('on', limitT > 0);
+      q('rpm').textContent = Math.round(rpm / 10) * 10;
+      q('peak').textContent = Math.round(peak / 10) * 10;
+      q('db').textContent = Math.round(db);
+      const lit = Math.round(level * SEGMENTS);
+      segs.forEach((s, i) => s.classList.toggle('on', i < lit));
+      box.style.setProperty('--throb', (level * frac).toFixed(3));
+
+      if (V && started) V.kick(reduce ? {} : { shake: Math.pow(Math.min(1, frac), 2.4) * 0.013 + (burn > 0 ? 0.006 : 0), dist: 1 - Math.min(1, frac) * 0.04 });
     }
 
+    label('Start & rev', 'fa-power-off');
     return {
-      tick, abort,
-      busy: () => st === 'stage' || st === 'run',
+      tick,
+      busy: () => started,
       onModel() {
+        const next = ENGINES[modelId];
+        if (next !== eng) {
+          if (burn > 0) endBurnout();
+          rpm = rpm / eng.limit * next.limit;
+          eng = next; peak = 0;
+          sound.horn(false);
+        }
+        buildGauge();
         q('model').textContent = MODELS[modelId].name;
-        q('factory').textContent = zeroFor(modelId).toFixed(1) + ' s' + (MODELS[modelId].est ? ' (est.)' : '');
-        $$('[data-lc-pick]', box).forEach(b => b.classList.toggle('on', b.dataset.lcPick === modelId));
-        paintBest();
+        q('spec').textContent = `${eng.label} · redline ${eng.limit.toLocaleString('en-US')} rpm`;
+        $$('[data-en-pick]', box).forEach(b => b.classList.toggle('on', b.dataset.enPick === modelId));
       }
     };
   })();
@@ -409,7 +481,6 @@
         $$('[data-count]', el).forEach(dd => countTo(dd, +dd.dataset.count, v => Math.round(v) + (dd.dataset.suffix || '')));
       }
       if (name === chapter) continue;
-      if (chapter === 'launch') LC.abort();
       chapter = name;
       document.body.dataset.chapter = name;
       document.body.dataset.side = el.dataset.side || '';
@@ -463,14 +534,14 @@
     const y = scrollY, max = document.documentElement.scrollHeight - innerHeight;
     progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
     header.classList.toggle('scrolled', y > 40);
-    LC.tick(dt);
+    EN.tick(dt);
     if (V) {
-      // gentle scroll-linked orbit inside the current section (held still during a launch)
+      // gentle scroll-linked orbit inside the current section
       const el = chapters.find(c => c.dataset.chapter === chapter);
       if (el && !reduce) {
         const r = el.getBoundingClientRect();
         const off = (innerHeight / 2 - (r.top + r.height / 2)) / innerHeight;
-        V.scrub(LC.busy() ? 0 : Math.max(-0.6, Math.min(0.6, off * 0.45)));
+        V.scrub(Math.max(-0.6, Math.min(0.6, off * 0.45)));
       }
       // hero auto-advances through the lineup until the visitor takes over
       if (chapter === 'hero' && !railStopped && booted && !document.hidden) {
