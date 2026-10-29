@@ -3090,7 +3090,7 @@
             }
             driveSpeed += ((state.drive ? 1 : 0) - driveSpeed) * (1 - Math.exp(-dt * 1.5));
             for (const s of V.wheelSlots) {
-                if (s.spinGroup) s.spinGroup.rotation.z -= driveSpeed * dt * 14;
+                if (s.spinGroup) s.spinGroup.rotation.z -= driveSpeed * dt * 14 * (state.driveRate || 1);
                 if (s.front) s.steer.rotation.y = Math.sin(t * 0.7) * 0.28 * driveSpeed * (s.steerSign ?? 1);
             }
             if (V.onFrame) V.onFrame(dt, t, driveSpeed);
@@ -3512,11 +3512,14 @@
     // az/el in radians around the vehicle, dist as a multiple of the framing distance,
     // ty lifts the look-at point (x fit radius), x/y slide the vehicle across the screen (fraction of width/height)
     const show = { az: 0.85, el: 0.2, dist: 1, ty: 0, x: 0, y: 0, drift: 0.1, scrub: 0, ox: 0, oy: 0, cur: null };
+    // short-lived camera effects layered on top of the goal (Home's Engine Room): zoom, dip and shake
+    const kick = { dist: 1, el: 0, shake: 0, speed: 0 };  // speed slides the floor grid past the vehicle
     const TAU = Math.PI * 2;
     const nearAz = (a, ref) => a + TAU * Math.round((ref - a) / TAU);
     function driveShowroom(dt) {
         const V = vehicle, inside = state.view === 'interior';
         const k = 1 - Math.exp(-dt * 2.4);
+        if (fx.grid) fx.grid.position.x = kick.speed ? (fx.grid.position.x - kick.speed * dt) % 1 : 0;
         show.ox = lerp(show.ox, show.x, k); show.oy = lerp(show.oy, show.y, k);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         if (w && h) camera.setViewOffset(w, h, -show.ox * w, -show.oy * h, w, h);
@@ -3530,9 +3533,10 @@
             const target = V.fit.center.clone(); target.y += show.ty * V.fit.radius;
             const r = V.fit.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.25 : 0.82) * show.dist;
             const c = show.cur;
-            c.az = lerp(c.az, show.az + show.scrub, k); c.el = lerp(c.el, show.el, k); c.r = lerp(c.r, r, k);
+            c.az = lerp(c.az, show.az + show.scrub, k); c.el = lerp(c.el, show.el + kick.el, k); c.r = lerp(c.r, r * kick.dist, k);
             controls.target.lerp(target, k);
-            camera.position.set(Math.sin(c.az) * Math.cos(c.el), Math.sin(c.el), Math.cos(c.az) * Math.cos(c.el)).multiplyScalar(c.r).add(controls.target);
+            const ja = (Math.random() - 0.5) * kick.shake, je = Math.max(0.01, c.el + (Math.random() - 0.5) * kick.shake);
+            camera.position.set(Math.sin(c.az + ja) * Math.cos(je), Math.sin(je), Math.cos(c.az + ja) * Math.cos(je)).multiplyScalar(c.r).add(controls.target);
         } else show.cur = null;
         camera.updateProjectionMatrix();
         camera.lookAt(controls.target);
@@ -3558,6 +3562,7 @@
             if (o.az !== undefined) show.az = show.cur ? nearAz(o.az, show.cur.az - show.scrub) : o.az;
         },
         nudge(dx, dy = 0) { show.az -= dx * 0.008; show.el = clamp(show.el + dy * 0.004, 0.02, 0.75); },
+        kick(o) { for (const key of ['dist', 'el', 'shake', 'speed']) if (o[key] !== undefined) kick[key] = o[key]; },
         scrub(v) { show.scrub = v; },
         // option change without toast, panel render or scan pass
         quiet(group, id) {
@@ -3575,6 +3580,7 @@
             if (o.env !== undefined && o.env !== state.env) { state.env = o.env; applyEnv(); }
             if (o.lights && o.lights !== state.lights) { state.lights = o.lights; applyLights(); }
             if (o.drive !== undefined) state.drive = o.drive;
+            if (o.driveRate !== undefined) state.driveRate = o.driveRate;
         },
         theme(light) { applyTheme(light ? 'light' : 'dark', true); },
         perf
