@@ -4,9 +4,9 @@ An interactive 3D vehicle customization platform that allows users to design and
 
 **🌐 Live demo: [velonixsun.vercel.app](https://velonixsun.vercel.app)**
 
-![Velonix demo: boot intro, hero effects, card tilt and page transition](screenshots/demo.gif)
+![Velonix demo: live 3D showroom, model switching, scroll chapters and the configurator](screenshots/demo.gif)
 
-*Boot intro → hero power-on and 3D tilt → smooth-scroll reveals → card spotlight tilt → neon page transition into the Garage.*
+*Live 3D hero → drag to rotate and switch models → scroll through Paint, Wheels, Light, Cabin and Power → carry the build into the configurator.*
 
 ## 🔥 Overview
 Velonix is a futuristic web-based configurator where users can:
@@ -14,6 +14,8 @@ Velonix is a futuristic web-based configurator where users can:
 - Customize colors, wheels, and engine types
 - View real-time price updates
 - Interact with a dynamic 3D environment
+
+The home page is a live 3D showroom: the same Three.js studio that powers the configurator runs full-screen behind the page, and scrolling flies the camera through each customization chapter.
 
 This project demonstrates front-end development, UI/UX design, and 3D rendering using JavaScript.
 
@@ -25,6 +27,7 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - CSS3
 - JavaScript (ES6)
 - Three.js (3D Rendering)
+- Lenis (smooth scrolling)
 - Font Awesome (Icons)
 
 ---
@@ -35,52 +38,52 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - 🚘 Multiple vehicle types (cars, bikes, trucks, and SUVs)
 - 💰 Dynamic pricing system
 - 📊 Live performance stats (speed, acceleration, handling)
-- 🌐 Multi-page navigation (Home, Garage, Configurator)
-- 🎥 Interactive 3D rendering with orbit controls
+- 🛰️ Live 3D home page: drag to rotate, switch models, scroll-driven camera through each chapter
+- 🔗 Picks made on the home page carry straight into the configurator
+- 🎥 Interactive 3D rendering with orbit controls, interior views and materialize effects
+- 🌗 Dark and light themes shared across pages
 - 📱 Responsive design
-- ✨ Cinematic motion: boot intro, smooth scrolling, 3D cursor tilt, scroll reveals and neon page transitions
 
 ---
 
 ## 📸 Screenshots
 
-### Home
+### Home: live 3D showroom
 
-![Velonix home page](screenshots/home.jpg)
+![Velonix home page with a live 3D car](screenshots/home.jpg)
+
+### Scroll chapters
+Each chapter moves the camera and lets you change the car right on the page.
+
+| Paint | Light & Scene |
+|-------|---------------|
+| ![Paint chapter](screenshots/paint.jpg) | ![Light chapter](screenshots/light.jpg) |
+| **Cabin** | **Power** |
+| ![Cabin chapter inside the car](screenshots/cabin.jpg) | ![Power chapter](screenshots/power.jpg) |
 
 ### 3D Configurator Lab
 Paint, wheels, lighting, interior and engine options with live pricing and performance stats.
 
 ![3D configurator](screenshots/configurator.jpg)
 
-### Garage — Base Chassis
-Five platforms: coupé, hypercar, SUV, long-haul tractor and superbike. Each opens straight in the configurator.
-
-![Garage page](screenshots/garage.jpg)
-
-### Signature Hall of Fame
-
-![Signature builds](screenshots/signature-builds.jpg)
-
 ### Light Theme
-The theme choice is shared across every page.
+The theme choice is shared between the home page and the configurator.
 
 ![Home page in light theme](screenshots/home-light.jpg)
 
 ### Mobile
 
-<p align="center"><img src="screenshots/mobile.jpg" alt="Home and Garage pages on mobile" width="520"></p>
+<p align="center"><img src="screenshots/mobile.jpg" alt="Home page on mobile" width="520"></p>
 
 ---
 
 ## 🚀 Live Demo
 
-👉 **[velonixsun.vercel.app](https://velonixsun.vercel.app)** — deployed on Vercel from the `main` branch.
+👉 **[velonixsun.vercel.app](https://velonixsun.vercel.app)**, deployed on Vercel from the `main` branch.
 
 | Page | Link |
 |------|------|
 | Home | [velonixsun.vercel.app](https://velonixsun.vercel.app) |
-| Garage | [velonixsun.vercel.app/Garage.html](https://velonixsun.vercel.app/Garage.html) |
 | Configurator | [velonixsun.vercel.app/customize.html](https://velonixsun.vercel.app/customize.html) |
 
 ---
@@ -88,12 +91,11 @@ The theme choice is shared across every page.
 ## 📂 Project Structure
 ```
 velonix-car-configurator/
-│── index.html        # Home page
-│── Garage.html       # Showroom: base chassis + signature builds
-│── customize.html    # 3D configurator lab (self-contained)
-│── site.css          # Shared styles for Home + Garage
-│── site.js           # Shared theme toggle + scroll reveal
-├── *.png             # Vehicle and studio images
+│── index.html        # Home: live 3D showroom with scroll chapters
+│── customize.html    # 3D configurator lab (self-contained; ?showroom=1 = canvas-only mode used by Home)
+│── site.css          # Home page styles
+│── site.js           # Home page logic: drives the embedded 3D studio
+│── customcar1.png    # Poster shown if WebGL is unavailable
 └── screenshots/      # README screenshots
 ```
 
@@ -105,7 +107,7 @@ velonix-car-configurator/
 - Working with 3D graphics using Three.js  
 - Managing application state in JavaScript  
 - Building interactive UI components  
-- Structuring multi-page web applications  
+- Driving an embedded 3D scene from page scroll  
 
 ---
 

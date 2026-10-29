@@ -13,6 +13,8 @@
         }
         if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
       } catch (error) {}
+      // ?showroom: canvas only, embedded behind the Home page and driven through window.velonix
+      if (/[?&]showroom(=|&|$)/.test(location.search)) document.documentElement.classList.add('showroom');
     }());
   </script>
   <title>Velonix - 3D Interactive Car Configurator</title>
@@ -388,7 +390,7 @@
     @keyframes toastIn { 0% { text-shadow: 3px 0 #ff2bd6, -3px 0 #5b00ff; } 40% { text-shadow: -2px 0 #fff, 2px 0 var(--neon-color); } 70%, 100% { text-shadow: none; } }
     @keyframes toastSlide { from { opacity:0; transform: translate(-50%, -14px) scaleX(.6); } to { opacity:1; transform: translate(-50%, 0); } }
 
-    /* page curtain (matches the Home and Garage pages) */
+    /* page curtain (matches the Home page) */
     .curtain { position: fixed; inset: 0; z-index: 9998; pointer-events: none; background: var(--bg-dark); transform: translateY(-101%); }
     .curtain::before, .curtain::after { content:""; position:absolute; left:0; right:0; height:2px; background: var(--neon-color); box-shadow: 0 0 18px var(--neon-color), 0 0 46px var(--neon-color); }
     .curtain::before { bottom:0; } .curtain::after { top:0; }
@@ -433,6 +435,14 @@
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
       header::after, .progress-fill::after, .checkout-btn::after, .readout .live::before { display: none; }
     }
+
+    /* ---------- SHOWROOM (3D only, embedded behind the Home page) ---------- */
+    html.showroom, html.showroom body { height: 100%; overflow: hidden; }
+    html.showroom header, html.showroom .panel, html.showroom .curtain, html.showroom .modal,
+    html.showroom .stage > :not(#viewport):not(.err) { display: none !important; }
+    html.showroom .app { display: block; height: 100%; }
+    html.showroom .stage { position: fixed; inset: 0; height: 100%; min-height: 0; }
+    html.showroom #viewport canvas { cursor: default; }
   </style>
 
   <script type="importmap">
@@ -451,7 +461,7 @@
     <div class="brand"><h1>VELONIX</h1><span>Configurator Lab</span></div>
     <div class="head-actions">
       <button class="theme-toggle" type="button" id="themeToggle" aria-pressed="false"></button>
-      <a href="Garage.html" class="back-btn"><i class="fas fa-arrow-left"></i> Exit Lab</a>
+      <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Exit Lab</a>
     </div>
   </header>
 
@@ -742,6 +752,7 @@
 
     let state = { model: carModels[0], sel: {}, custom: { hex: '#00d9c8', finish: 'metallic' }, tab: 'model',
                   lights: 'drl', drive: false, rotate: false, env: document.documentElement.dataset.theme === 'light' ? 1 : 0, view: 'front34' };
+    const SHOWROOM = document.documentElement.classList.contains('showroom');
 
     // ==========================================
     // 2. SMALL MATH HELPERS
@@ -1104,7 +1115,7 @@
     function initThreeJS() {
         const container = document.getElementById('viewport');
         renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, SHOWROOM ? 1.25 : 2));
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
@@ -1128,6 +1139,7 @@
         controls.maxPolarAngle = Math.PI / 2 - 0.04;
         controls.autoRotateSpeed = 0.8;
         controls.addEventListener('start', () => { camTween = null; });
+        if (SHOWROOM) controls.enabled = false;
 
         // Lights
         studio.hemi = new THREE.HemisphereLight(0xffffff, 0x202024, 0.5);
@@ -1175,7 +1187,7 @@
         initPointer();
     }
 
-    // Shared site theme (same storage key as index.html and Garage.html)
+    // Shared site theme (same storage key as index.html)
     function applyTheme(theme, syncScene) {
         const light = theme === 'light';
         document.documentElement.dataset.theme = light ? 'light' : 'dark';
@@ -3092,10 +3104,13 @@
             if (camTween.f0 !== camTween.f1) { camera.fov = lerp(camTween.f0, camTween.f1, e); camera.updateProjectionMatrix(); }
             if (camTween.t >= 1) camTween = null;
         }
-        controls.autoRotate = state.rotate && state.view !== 'interior';
-        controls.update();
+        if (SHOWROOM) driveShowroom(dt);
+        else {
+            controls.autoRotate = state.rotate && state.view !== 'interior';
+            controls.update();
+            updateReadout(dt);
+        }
         updateFX(dt, t);
-        updateReadout(dt);
         composer.render();
     }
 
@@ -3386,7 +3401,7 @@
         state.model = m;
         ensureDefaults();
         windowsTarget = 0;
-        history.replaceState(null, '', '?model=' + m.id);
+        if (!SHOWROOM) history.replaceState(null, '', '?model=' + m.id);
         loadVehicle(m);
         renderTabs(); renderPanel(); renderToolbar(); updateStats();
         ping($('panelBody').querySelector(`[data-model="${m.id}"]`));
@@ -3493,6 +3508,78 @@
     // handle for console debugging
     window.velonix = { state, setView, setModel, select, toolAction, togglePart, get vehicle() { return vehicle; } };
 
+    // ---------- Showroom camera: the Home page sets goals, this eases toward them ----------
+    // az/el in radians around the vehicle, dist as a multiple of the framing distance,
+    // ty lifts the look-at point (x fit radius), x/y slide the vehicle across the screen (fraction of width/height)
+    const show = { az: 0.85, el: 0.2, dist: 1, ty: 0, x: 0, y: 0, drift: 0.1, scrub: 0, ox: 0, oy: 0, cur: null };
+    const TAU = Math.PI * 2;
+    const nearAz = (a, ref) => a + TAU * Math.round((ref - a) / TAU);
+    function driveShowroom(dt) {
+        const V = vehicle, inside = state.view === 'interior';
+        const k = 1 - Math.exp(-dt * 2.4);
+        show.ox = lerp(show.ox, show.x, k); show.oy = lerp(show.oy, show.y, k);
+        const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+        if (w && h) camera.setViewOffset(w, h, -show.ox * w, -show.oy * h, w, h);
+        if (V && !camTween && !inside) {
+            if (!reduceMotion) show.az += show.drift * dt;
+            if (!show.cur) {
+                const off = camera.position.clone().sub(controls.target), r = off.length();
+                show.cur = { az: Math.atan2(off.x, off.z), el: Math.asin(off.y / r), r };
+                show.az = nearAz(show.az, show.cur.az - show.scrub);
+            }
+            const target = V.fit.center.clone(); target.y += show.ty * V.fit.radius;
+            const r = V.fit.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.25 : 0.82) * show.dist;
+            const c = show.cur;
+            c.az = lerp(c.az, show.az + show.scrub, k); c.el = lerp(c.el, show.el, k); c.r = lerp(c.r, r, k);
+            controls.target.lerp(target, k);
+            camera.position.set(Math.sin(c.az) * Math.cos(c.el), Math.sin(c.el), Math.cos(c.az) * Math.cos(c.el)).multiplyScalar(c.r).add(controls.target);
+        } else show.cur = null;
+        camera.updateProjectionMatrix();
+        camera.lookAt(controls.target);
+    }
+
+    function perf() {
+        const m = state.model, eng = choice('engine'), boost = eng.boost, mods = statMods();
+        return {
+            hp: Math.round(m.hp * eng.hpMul),
+            zero: m.zero ? +(m.zero * (1 - (boost + mods.acc) / 100 * 0.9)).toFixed(1) : 0,
+            top: Math.round(m.vmax * (1 + (boost + mods.spd) / 200)),
+            price: totalPrice()
+        };
+    }
+
+    if (SHOWROOM) Object.assign(window.velonix, {
+        ready: false,
+        models: carModels,
+        show(o) {
+            if (o.view === 'interior') { if (state.view !== 'interior' && vehicle && vehicle.interiorCam) setView('interior'); }
+            else if (state.view === 'interior') setView('front34');
+            for (const key of ['el', 'dist', 'ty', 'x', 'y', 'drift']) if (o[key] !== undefined) show[key] = o[key];
+            if (o.az !== undefined) show.az = show.cur ? nearAz(o.az, show.cur.az - show.scrub) : o.az;
+        },
+        nudge(dx, dy = 0) { show.az -= dx * 0.008; show.el = clamp(show.el + dy * 0.004, 0.02, 0.75); },
+        scrub(v) { show.scrub = v; },
+        // option change without toast, panel render or scan pass
+        quiet(group, id) {
+            const prevWheel = wheelKey();
+            state.sel[group] = id;
+            if (wheelKey() !== prevWheel) rebuildWheels(vehicle);
+            applyAll();
+        },
+        choices(group) {
+            const g = OPTIONS.find(o => o.id === group), type = state.model.type;
+            if (!g || !g.types.includes(type)) return [];
+            return choicesFor(g).filter(c => !c.custom).map(c => ({ id: c.id, name: group === 'engine' ? c.names[type] : c.name, hex: c.hex, finish: c.finish, price: c.price, desc: c.desc }));
+        },
+        set(o) {
+            if (o.env !== undefined && o.env !== state.env) { state.env = o.env; applyEnv(); }
+            if (o.lights && o.lights !== state.lights) { state.lights = o.lights; applyLights(); }
+            if (o.drive !== undefined) state.drive = o.drive;
+        },
+        theme(light) { applyTheme(light ? 'light' : 'dark', true); },
+        perf
+    });
+
     let toastTimer;
     function toast(msg) {
         const t = $('toast'); t.innerText = msg; t.classList.add('show');
@@ -3531,15 +3618,21 @@
             const requested = carModels.find(c => c.id === params.get('model'));
             if (requested) state.model = requested;
             ensureDefaults();
+            for (const [k, v] of params) {
+                const g = OPTIONS.find(o => o.id === k);
+                if (g && g.types.includes(state.model.type) && choicesFor(g).some(c => c.id === v && !c.custom)) state.sel[k] = v;
+            }
             await step(74, 'Assembling ' + state.model.name);
             loadVehicle(state.model);
             renderTabs(); renderPanel(); renderToolbar(); updateStats();
             animate();
             await step(100, 'Studio online');
             fx.booted = true;
+            if (SHOWROOM) { window.velonix.ready = true; parent.postMessage({ velonix: 'ready' }, location.origin); }
             setTimeout(() => $('loader').classList.add('hide'), 380);
         } catch (err) {
             console.error(err);
+            if (SHOWROOM) parent.postMessage({ velonix: 'error' }, location.origin);
             $('err').style.display = 'flex';
             $('err').innerHTML = `<div><h3 style="color:#bc13fe;margin-bottom:8px">3D studio unavailable</h3><p>${err.message}</p></div>`;
             $('loader').classList.add('hide');
