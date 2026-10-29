@@ -305,6 +305,106 @@
     html[data-theme="light"] .modal-actions button { border-color:#cfcbd9; }
     html[data-theme="light"] .modal-actions button.primary { color:#fff; }
 
+    /* ---------- FUTURISTIC FX ---------- */
+    @property --pct { syntax: '<integer>'; inherits: false; initial-value: 0; }
+    header { position: relative; }
+    header::after {
+      content:""; position:absolute; left:0; bottom:-1px; width:22%; height:1px; pointer-events:none;
+      background: linear-gradient(90deg, transparent, #fff, var(--neon-color), transparent);
+      box-shadow: 0 0 10px var(--neon-color); animation: headerStreak 6s cubic-bezier(.45,0,.55,1) infinite;
+    }
+    @keyframes headerStreak { 0% { transform: translateX(-100%); opacity:0; } 10% { opacity:1; } 60% { transform: translateX(460%); opacity:1; } 61%, 100% { transform: translateX(460%); opacity:0; } }
+
+    /* boot loader */
+    .loader { clip-path: inset(0 0 0 0); transition: clip-path .85s cubic-bezier(.76,0,.24,1), opacity .85s; }
+    .loader.hide { opacity: 1; clip-path: inset(0 0 100% 0); }
+    .loader::before {
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px),
+                  radial-gradient(45% 35% at 50% 50%, rgba(188,19,254,.16), transparent 70%);
+    }
+    .loader::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background: var(--neon-color); box-shadow: 0 0 18px var(--neon-color), 0 0 40px var(--neon-color); }
+    .boot-box { position: relative; width: min(400px, 76%); text-align: center; }
+    .boot-logo { font: 800 clamp(1.8rem, 5vw, 3rem) 'Orbitron', sans-serif; letter-spacing: .32em; margin-right: -.32em; color: var(--neon-color); text-shadow: 0 0 26px var(--neon-glow); }
+    .boot-logo span { display: inline-block; animation: bootChar .7s ease calc(var(--i) * 70ms + .05s) both; }
+    .boot-bar { height: 2px; background: #1b1b21; margin: 24px 0 13px; overflow: hidden; border-radius: 2px; }
+    .boot-bar span { display: block; height: 100%; transform-origin: left; transform: scaleX(0); transition: transform .45s cubic-bezier(.2,.8,.2,1); background: linear-gradient(90deg, #7a12b8, var(--neon-color), #fff); box-shadow: 0 0 12px var(--neon-color); }
+    .boot-status { display: flex; justify-content: space-between; gap: 12px; font: 600 .68rem 'Orbitron', sans-serif; letter-spacing: .2em; color: #8b8b96; text-transform: uppercase; }
+    .boot-status b { color: #d98bff; font-weight: 600; }
+    @keyframes bootChar { 0% { opacity:0; transform: translateY(10px); filter: blur(8px); } 30% { opacity:1; transform:none; filter:none; } 42% { opacity:.2; } 56% { opacity:1; } 70% { opacity:.55; } 100% { opacity:1; transform:none; } }
+
+    /* stage HUD */
+    .hud { position:absolute; inset:14px; z-index:4; pointer-events:none; }
+    .hud i { position:absolute; width:26px; height:26px; border: 0 solid var(--neon-color); opacity:.75; filter: drop-shadow(0 0 4px var(--neon-color)); animation: hudIn .9s cubic-bezier(.2,.8,.2,1) both; }
+    .hud i:nth-child(1) { top:0; left:0; border-top-width:2px; border-left-width:2px; }
+    .hud i:nth-child(2) { top:0; right:0; border-top-width:2px; border-right-width:2px; }
+    .hud i:nth-child(3) { bottom:0; left:0; border-bottom-width:2px; border-left-width:2px; }
+    .hud i:nth-child(4) { bottom:0; right:0; border-bottom-width:2px; border-right-width:2px; }
+    @keyframes hudIn { from { opacity:0; transform: scale(1.8); } }
+    .readout {
+      position:absolute; right:26px; bottom:26px; z-index:6; pointer-events:none;
+      font: 600 .66rem 'Orbitron', sans-serif; letter-spacing: .14em; text-transform: uppercase; color:#8b8b96;
+      display:flex; flex-direction:column; gap:6px; align-items:flex-end;
+    }
+    .readout b { color: var(--text-main); font-weight:600; }
+    .readout .live { display:inline-flex; align-items:center; gap:6px; color: var(--neon-color); }
+    .readout .live::before { content:""; width:6px; height:6px; border-radius:50%; background: var(--neon-color); box-shadow: 0 0 8px var(--neon-color); animation: livePulse 1.4s ease-in-out infinite; }
+    @keyframes livePulse { 50% { opacity:.3; } }
+    .stage-title h2 { min-height: 1.2em; }
+    .stage-title.flash h2 { animation: titleGlitch .36s steps(1); }
+    @keyframes titleGlitch { 0% { text-shadow: 3px 0 #fff, -3px 0 var(--neon-color); } 33% { text-shadow: -4px 0 #ff2bd6, 4px 0 #5b00ff; } 66% { text-shadow: 2px 0 var(--neon-color), -2px 0 #fff; } }
+
+    /* stats */
+    .progress-fill { position: relative; }
+    .progress-fill::after { content:""; position:absolute; top:0; bottom:0; width:30px; right:0; background: linear-gradient(90deg, transparent, #fff); opacity:.8; animation: barGlint 2.4s ease-in-out infinite; }
+    @keyframes barGlint { 0%, 100% { opacity:0; } 50% { opacity:.85; } }
+    .total-price.bump { animation: priceBump .6s cubic-bezier(.2,.8,.2,1); }
+    @keyframes priceBump { 30% { transform: scale(1.06); text-shadow: 0 0 24px var(--neon-color), 0 0 40px var(--neon-color); } }
+    .total-price { transform-origin: left bottom; display: inline-block; }
+
+    /* panel */
+    .tab.on i { filter: drop-shadow(0 0 6px var(--neon-color)); }
+    .tab.on { background: linear-gradient(0deg, rgba(188,19,254,.12), transparent 70%); }
+    .panel-body.swap > .group { animation: groupIn .55s cubic-bezier(.2,.8,.2,1) both; }
+    .panel-body.swap > .group:nth-child(2) { animation-delay: .06s; } .panel-body.swap > .group:nth-child(3) { animation-delay: .12s; }
+    .panel-body.swap > .group:nth-child(4) { animation-delay: .18s; } .panel-body.swap > .group:nth-child(n+5) { animation-delay: .24s; }
+    @keyframes groupIn { from { opacity:0; transform: translateY(14px); filter: blur(4px); } }
+    .card, .chip { position: relative; }
+    .card::before {
+      content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; opacity:0; transition: opacity .3s;
+      background: radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), var(--neon-color), transparent 70%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    .card:hover::before { opacity:1; }
+    .ping { animation: ping .7s cubic-bezier(.2,.8,.2,1); }
+    .swatch.ping { animation: pingRound .7s cubic-bezier(.2,.8,.2,1); }
+    @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(188,19,254,.7), inset 0 0 18px rgba(188,19,254,.15); } 100% { box-shadow: 0 0 0 12px rgba(188,19,254,0), inset 0 0 18px rgba(188,19,254,.15); } }
+    @keyframes pingRound { 0% { box-shadow: 0 0 0 0 rgba(188,19,254,.8); } 100% { box-shadow: 0 0 0 14px rgba(188,19,254,0); } }
+    .checkout-btn { position: relative; overflow: hidden; isolation: isolate; animation: btnGlow 2.8s ease-in-out infinite; }
+    .checkout-btn::after { content:""; position:absolute; top:0; bottom:0; left:-60%; width:40%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); animation: btnSweep 4s ease-in-out infinite; pointer-events:none; }
+    @keyframes btnSweep { 0%, 55% { left:-60%; } 85%, 100% { left:130%; } }
+    @keyframes btnGlow { 50% { box-shadow: 0 0 30px rgba(188,19,254,.6); } }
+    .toast.show { animation: toastIn .45s steps(1, end) both, toastSlide .45s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes toastIn { 0% { text-shadow: 3px 0 #ff2bd6, -3px 0 #5b00ff; } 40% { text-shadow: -2px 0 #fff, 2px 0 var(--neon-color); } 70%, 100% { text-shadow: none; } }
+    @keyframes toastSlide { from { opacity:0; transform: translate(-50%, -14px) scaleX(.6); } to { opacity:1; transform: translate(-50%, 0); } }
+
+    /* page curtain (matches the Home and Garage pages) */
+    .curtain { position: fixed; inset: 0; z-index: 9998; pointer-events: none; background: var(--bg-dark); transform: translateY(-101%); }
+    .curtain::before, .curtain::after { content:""; position:absolute; left:0; right:0; height:2px; background: var(--neon-color); box-shadow: 0 0 18px var(--neon-color), 0 0 46px var(--neon-color); }
+    .curtain::before { bottom:0; } .curtain::after { top:0; }
+    .curtain { animation: curtainOut .85s cubic-bezier(.76,0,.24,1) .05s both; }
+    .curtain.cover { animation: curtainIn .5s cubic-bezier(.76,0,.24,1) both; }
+    @keyframes curtainOut { from { transform: translateY(0); } to { transform: translateY(-101%); } }
+    @keyframes curtainIn { from { transform: translateY(101%); } to { transform: translateY(0); } }
+
+    html[data-theme="light"] .boot-bar { background:#dcd8e8; }
+    html[data-theme="light"] .boot-status { color:#5c5970; }
+    html[data-theme="light"] .boot-status b { color: var(--neon-color); }
+    html[data-theme="light"] .loader::before { background: radial-gradient(45% 35% at 50% 50%, rgba(138,18,196,.1), transparent 70%); }
+    html[data-theme="light"] .readout { color:#5c5970; }
+    html[data-theme="light"] .tab.on { background: linear-gradient(0deg, rgba(138,18,196,.08), transparent 70%); }
+    html[data-theme="light"] .progress-fill::after { display:none; }
+
     /* ---------- RESPONSIVE ---------- */
     @media (max-width: 1100px) { .app { grid-template-columns: minmax(0,1fr) 370px; } }
     @media (max-width: 900px) {
@@ -327,6 +427,11 @@
       .tool .tip { display:none; }
       .views { bottom:12px; max-width: calc(100% - 24px); overflow-x:auto; }
       .views button { padding:7px 11px; font-size:.8rem; }
+      .readout, .hud { display:none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      header::after, .progress-fill::after, .checkout-btn::after, .readout .live::before { display: none; }
     }
   </style>
 
@@ -340,6 +445,7 @@
   </script>
 </head>
 <body>
+  <div class="curtain" aria-hidden="true"></div>
 
   <header>
     <div class="brand"><h1>VELONIX</h1><span>Configurator Lab</span></div>
@@ -384,8 +490,17 @@
         </div>
       </div>
 
+      <div class="hud" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="readout" id="readout" aria-hidden="true"></div>
+
       <div class="toast" id="toast"></div>
-      <div class="loader" id="loader"><div class="ring"></div><p>INITIALISING STUDIO</p></div>
+      <div class="loader" id="loader">
+        <div class="boot-box">
+          <div class="boot-logo"><span style="--i:0">V</span><span style="--i:1">E</span><span style="--i:2">L</span><span style="--i:3">O</span><span style="--i:4">N</span><span style="--i:5">I</span><span style="--i:6">X</span></div>
+          <div class="boot-bar"><span id="bootBar"></span></div>
+          <div class="boot-status"><span id="bootStep">Initialising studio</span><b id="bootPct">0%</b></div>
+        </div>
+      </div>
       <div class="err" id="err"></div>
     </section>
 
@@ -1047,6 +1162,7 @@
         composer.addPass(bloomPass);
         composer.addPass(new OutputPass());
 
+        initFX();
         applyEnv();
 
         new ResizeObserver(() => {
@@ -1082,6 +1198,7 @@
         scene.fog.color.set(e.fog);
         renderer.toneMappingExposure = e.exposure;
         studio.hemi.intensity = e.hemi; studio.key.intensity = e.key;
+        fxEnv();
     }
 
     // ==========================================
@@ -2822,6 +2939,8 @@
         controls.maxDistance = V.fit.radius * 6;
         scene.fog.near = V.fit.radius * 3.2; scene.fog.far = V.fit.radius * 9;
         setView(state.view === 'interior' && V.interiorCam ? 'interior' : 'front34', true);
+        fxFit(box, plateR);
+        startScan(true, fx.booted ? 0.1 : 0.75);
     }
 
     function applyAll() {
@@ -2975,7 +3094,171 @@
         }
         controls.autoRotate = state.rotate && state.view !== 'interior';
         controls.update();
+        updateFX(dt, t);
+        updateReadout(dt);
         composer.render();
+    }
+
+    // ==========================================
+    // 13b. STUDIO FX (neon turntable, floor grid, dust, scan sweep)
+    // ==========================================
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const FX_ENV = [
+        { color: '#bc13fe', ring: 1.0, grid: 0.13, dust: 0.5 },   // Studio
+        { color: '#8a12c4', ring: 0.35, grid: 0.07, dust: 0.0 },  // Daylight
+        { color: '#d04bff', ring: 1.5, grid: 0.28, dust: 0.75 }   // Neon Night
+    ];
+    const fx = { scanT: -1, delay: 0, booted: false };
+    // Clips only the vehicle (its materials get it in fxFit); parked far above the scene when idle
+    const scanClip = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e4);
+
+    function initFX() {
+        const g = new THREE.Group(); scene.add(g); fx.group = g;
+        const glowMat = () => new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, fog: false });
+        const flat = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; return m; };
+
+        fx.ringMat = glowMat();
+        fx.ring = flat(new THREE.RingGeometry(0.988, 1, 220), fx.ringMat, 0.006); g.add(fx.ring);
+        fx.innerMat = glowMat();
+        fx.inner = flat(new THREE.RingGeometry(0.86, 0.864, 180), fx.innerMat, 0.006); g.add(fx.inner);
+        fx.dashMat = glowMat();
+        fx.dash = new THREE.Group(); fx.dash.position.y = 0.007; g.add(fx.dash);
+        for (let i = 0; i < 8; i++) fx.dash.add(flat(new THREE.RingGeometry(0.925, 0.94, 24, 1, i * Math.PI / 4, Math.PI / 9), fx.dashMat, 0));
+
+        fx.grid = new THREE.GridHelper(80, 80, 0xffffff, 0xffffff);
+        fx.grid.material.transparent = true; fx.grid.material.depthWrite = false;
+        fx.grid.position.y = -0.056; g.add(fx.grid);
+
+        const N = 420, pos = new Float32Array(N * 3);
+        fx.dustSpeed = new Float32Array(N);
+        for (let i = 0; i < N; i++) {
+            const r = 1.2 + Math.random() * 8.5, a = Math.random() * Math.PI * 2;
+            pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = Math.random() * 5; pos[i * 3 + 2] = Math.sin(a) * r;
+            fx.dustSpeed[i] = 0.05 + Math.random() * 0.18;
+        }
+        const dustGeo = new THREE.BufferGeometry();
+        dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        fx.dustPos = dustGeo.attributes.position;
+        fx.dustMat = new THREE.PointsMaterial({
+            size: 0.045, sizeAttenuation: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+            map: canvasTex(64, 64, (ctx, w, h) => {
+                const gr = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+                gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
+            })
+        });
+        fx.dust = new THREE.Points(dustGeo, fx.dustMat); g.add(fx.dust);
+
+        fx.scanMat = new THREE.MeshBasicMaterial({
+            transparent: true, depthWrite: false, toneMapped: false, fog: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+            map: canvasTex(256, 256, (ctx, w, h) => {
+                ctx.fillStyle = 'rgba(255,255,255,.022)'; ctx.fillRect(0, 0, w, h);
+                ctx.strokeStyle = 'rgba(255,255,255,.055)'; ctx.lineWidth = 1;
+                for (let i = 16; i < w; i += 16) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke(); }
+                ctx.shadowColor = '#fff'; ctx.shadowBlur = 10; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.strokeRect(4, 4, w - 8, h - 8);
+            })
+        });
+        fx.scan = flat(new THREE.PlaneGeometry(1, 1), fx.scanMat, 0); fx.scan.visible = false; g.add(fx.scan);
+    }
+
+    function fxEnv() {
+        if (!fx.group) return;
+        const f = FX_ENV[state.env], c = new THREE.Color(f.color);
+        fx.ringMat.color.copy(c).multiplyScalar(4.2 * f.ring);
+        fx.innerMat.color.copy(c).multiplyScalar(1.4 * f.ring);
+        fx.dashMat.color.copy(c).multiplyScalar(2.6 * f.ring);
+        fx.grid.material.color.copy(c); fx.grid.material.opacity = f.grid;
+        fx.dustMat.color.set(state.env === 2 ? '#e7b8ff' : '#cfc6e8'); fx.dustMat.opacity = f.dust; fx.dust.visible = f.dust > 0;
+        fx.scanMat.color.copy(c).multiplyScalar(state.env === 1 ? 1.6 : 4.5);
+    }
+
+    function fxFit(box, plateR) {
+        if (!fx.group) return;
+        const r = plateR + 0.04;
+        fx.ring.scale.set(r, r, 1); fx.inner.scale.set(r, r, 1); fx.dash.scale.set(r, 1, r);
+        fx.box = box.clone();
+        // Every vehicle material gets the scan clip plane (compiled once, while the new model is being built anyway)
+        vehicle.group.traverse(o => {
+            if (o.material) for (const m of [].concat(o.material)) { m.clippingPlanes = [scanClip]; m.clipShadows = true; }
+        });
+    }
+
+    // Sweep a glowing scan plane through the vehicle; materialize also reveals it from the floor up
+    function startScan(materialize, delay = 0) {
+        if (!fx.box || reduceMotion) return;
+        const sz = fx.box.getSize(new THREE.Vector3()), c = fx.box.getCenter(new THREE.Vector3());
+        fx.scan.scale.set(sz.x * 1.08 + 0.12, sz.z * 1.08 + 0.12, 1);
+        fx.scan.position.set(c.x, fx.box.min.y, c.z);
+        fx.materialize = materialize; fx.delay = delay; fx.scanDur = materialize ? 1.5 : 0.95; fx.scanT = 0;
+        if (materialize) scanClip.constant = fx.box.min.y - 0.01;
+    }
+
+    function updateFX(dt, t) {
+        if (!fx.group) return;
+        if (!reduceMotion) fx.dash.rotation.y += dt * 0.22;
+        fx.ringMat.opacity = reduceMotion ? 1 : 0.78 + Math.sin(t * 2.2) * 0.22;
+        if (fx.dust.visible && !reduceMotion) {
+            const p = fx.dustPos.array;
+            for (let i = 0; i < fx.dustSpeed.length; i++) { p[i * 3 + 1] += fx.dustSpeed[i] * dt; if (p[i * 3 + 1] > 5) p[i * 3 + 1] = 0; }
+            fx.dustPos.needsUpdate = true;
+            fx.dust.rotation.y += dt * 0.025;
+        }
+        if (fx.scanT < 0) return;
+        if (fx.delay > 0) { fx.delay -= dt; return; }
+        fx.scanT = Math.min(1, fx.scanT + dt / fx.scanDur);
+        const k = fx.scanT, e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        const y = lerp(fx.box.min.y - 0.02, fx.box.max.y + 0.08, e);
+        fx.scan.visible = true; fx.scan.position.y = y;
+        fx.scanMat.opacity = k > 0.82 ? (1 - k) / 0.18 : Math.min(1, k * 8);
+        if (fx.materialize) scanClip.constant = y;
+        if (k >= 1) { fx.scanT = -1; fx.scan.visible = false; scanClip.constant = 1e4; }
+    }
+
+    // Stage readout: frame rate, camera heading, scene
+    let fpsFrames = 0, fpsTime = 0;
+    function updateReadout(dt) {
+        fpsFrames++; fpsTime += dt;
+        if (fpsTime < 0.5) return;
+        const fps = Math.round(fpsFrames / fpsTime); fpsFrames = 0; fpsTime = 0;
+        const off = camera.position.clone().sub(controls.target);
+        const heading = (THREE.MathUtils.radToDeg(Math.atan2(off.x, off.z)) + 360) % 360;
+        $('readout').innerHTML = `<span class="live">Live</span><span>FPS <b>${fps}</b></span><span>CAM <b>${heading.toFixed(0).padStart(3, '0')}°</b></span><span>Scene <b>${ENVS[state.env].name}</b></span>`;
+    }
+
+    // ---------- UI motion helpers ----------
+    const GLYPHS = '<>/\\[]{}=+*#_-01ABCDEFXV';
+    function decode(el, text) {
+        cancelAnimationFrame(el._decode);
+        if (reduceMotion) { el.innerText = text; return; }
+        const start = performance.now(), dur = 450 + text.length * 22;
+        const step = now => {
+            const p = Math.min(1, (now - start) / dur);
+            let out = '';
+            for (let i = 0; i < text.length; i++) out += text[i] === ' ' || i / text.length < p * 1.2 - 0.15 ? text[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+            el.innerText = p < 1 ? out : text;
+            if (p < 1) el._decode = requestAnimationFrame(step);
+        };
+        el._decode = requestAnimationFrame(step);
+    }
+    // Rolls a number from what is shown now to the new value; no-op when unchanged
+    function rollTo(el, value, format) {
+        if (el._value === value) return false;
+        cancelAnimationFrame(el._roll);
+        const from = el._value, start = performance.now();
+        el._value = value;
+        if (reduceMotion || from === undefined) { el.innerText = format(value); return false; }
+        const step = now => {
+            const p = Math.min(1, (now - start) / 700), e = 1 - Math.pow(1 - p, 3);
+            el.innerText = format(from + (value - from) * e);
+            if (p < 1) el._roll = requestAnimationFrame(step);
+        };
+        el._roll = requestAnimationFrame(step);
+        return true;
+    }
+    function ping(el) { if (!el) return; el.classList.remove('ping'); void el.offsetWidth; el.classList.add('ping'); }
+    function flashTitle() {
+        const st = document.querySelector('.stage-title');
+        st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash');
     }
 
     // ==========================================
@@ -3004,7 +3287,13 @@
         const tabs = TABS.filter(t => t.id === 'model' || t.id === 'summary' || groupsFor(t.id).length);
         if (!tabs.find(t => t.id === state.tab)) state.tab = 'model';
         $('tabs').innerHTML = tabs.map(t => `<button class="tab ${t.id === state.tab ? 'on' : ''}" data-tab="${t.id}"><i class="fas ${t.icon}"></i>${t.name}</button>`).join('');
-        $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; renderTabs(); renderPanel(); $('panelBody').scrollTop = 0; });
+        $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => {
+            if (state.tab === b.dataset.tab) return;
+            state.tab = b.dataset.tab; renderTabs(); renderPanel();
+            const body = $('panelBody'); body.scrollTop = 0;
+            body.classList.remove('swap'); void body.offsetWidth; body.classList.add('swap');
+            clearTimeout(body._swap); body._swap = setTimeout(() => body.classList.remove('swap'), 900);
+        });
     }
 
     function renderPanel() {
@@ -3084,6 +3373,8 @@
         if (wheelKey() !== prevWheel) rebuildWheels(vehicle);
         applyAll();
         renderPanel(); updateStats();
+        ping($('panelBody').querySelector(`[data-g="${groupId}"][data-c="${choiceId}"]`));
+        if (fx.scanT < 0) startScan(false);
         const g = OPTIONS.find(o => o.id === groupId), c = g.choices.find(x => x.id === choiceId);
         toast(`${g.title}: ${groupId === 'engine' ? c.names[state.model.type] : c.name}`);
     }
@@ -3096,6 +3387,7 @@
         history.replaceState(null, '', '?model=' + m.id);
         loadVehicle(m);
         renderTabs(); renderPanel(); renderToolbar(); updateStats();
+        ping($('panelBody').querySelector(`[data-model="${m.id}"]`));
     }
 
     function renderToolbar() {
@@ -3153,19 +3445,21 @@
     function updateStats() {
         const m = state.model, eng = choice('engine'), boost = eng.boost, mods = statMods();
         const total = totalPrice();
-        $('totalPrice').innerText = fmt(total);
+        if (rollTo($('totalPrice'), total, fmt)) ping($('totalPrice'));
         $('monthly').innerHTML = `from <b>${fmt(total / 60 * 1.049)}</b>/mo<br><small>60 months · 4.9% APR</small>`;
-        $('modelNameDisplay').innerText = m.name;
+        if (fx.titleId !== m.id) {
+            fx.titleId = m.id;
+            decode($('modelNameDisplay'), m.name); decode($('stageEyebrow'), m.eyebrow); flashTitle();
+        }
         $('panelModel').innerText = m.name;
-        $('stageEyebrow').innerText = m.eyebrow;
         $('stageTagline').innerText = m.tagline;
         const spd = Math.min(100, m.speed + boost + mods.spd), acc = Math.min(100, m.acc + boost / 2 + mods.acc), hnd = Math.min(100, m.handling + mods.hnd);
         updateBar('barSpeed', 'statSpeedVal', spd);
         updateBar('barAcc', 'statAccVal', acc);
         updateBar('barHand', 'statHandVal', hnd);
-        $('specHp').innerText = Math.round(m.hp * eng.hpMul);
+        rollTo($('specHp'), Math.round(m.hp * eng.hpMul), Math.round);
         $('specZero').innerText = m.zero ? (m.zero * (1 - (boost + mods.acc) / 100 * 0.9)).toFixed(1) + 's' : '—';
-        $('specTop').innerText = Math.round(m.vmax * (1 + (boost + mods.spd) / 200));
+        rollTo($('specTop'), Math.round(m.vmax * (1 + (boost + mods.spd) / 200)), Math.round);
         if (state.tab === 'summary') renderPanel();
     }
     function updateBar(barId, txtId, val) {
@@ -3206,27 +3500,61 @@
     // ==========================================
     // 15. BOOT
     // ==========================================
+    // Loader progress: bar, status line and a counted percentage; yields a frame so each stage paints
+    let bootShown = 0;
+    function step(pct, label) {
+        $('bootBar').style.transform = `scaleX(${pct / 100})`;
+        $('bootStep').innerText = label;
+        const from = bootShown, start = performance.now(); bootShown = pct;
+        const tick = now => {
+            const p = Math.min(1, (now - start) / 350);
+            $('bootPct').innerText = Math.round(from + (pct - from) * p) + '%';
+            if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        return new Promise(r => requestAnimationFrame(() => setTimeout(r, 60)));
+    }
+
     async function boot() {
         applyTheme(document.documentElement.dataset.theme, false);
         $('themeToggle').onclick = () => applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
         try {
+            await step(8, 'Syncing typefaces');
             await Promise.race([Promise.all([document.fonts.load('800 40px Orbitron'), document.fonts.load('600 20px Rajdhani')]), new Promise(r => setTimeout(r, 2500))]);
+            await step(26, 'Baking material maps');
             buildTextures();
+            await step(52, 'Powering studio rig');
             initThreeJS();
             const params = new URLSearchParams(window.location.search);
             const requested = carModels.find(c => c.id === params.get('model'));
             if (requested) state.model = requested;
             ensureDefaults();
+            await step(74, 'Assembling ' + state.model.name);
             loadVehicle(state.model);
             renderTabs(); renderPanel(); renderToolbar(); updateStats();
             animate();
-            setTimeout(() => $('loader').classList.add('hide'), 250);
+            await step(100, 'Studio online');
+            fx.booted = true;
+            setTimeout(() => $('loader').classList.add('hide'), 380);
         } catch (err) {
             console.error(err);
             $('err').style.display = 'flex';
             $('err').innerHTML = `<div><h3 style="color:#bc13fe;margin-bottom:8px">3D studio unavailable</h3><p>${err.message}</p></div>`;
             $('loader').classList.add('hide');
         }
+        $('panelBody').addEventListener('pointermove', e => {
+            const card = e.target.closest('.card'); if (!card) return;
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--mx', (e.clientX - r.left) + 'px'); card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        });
+        document.querySelector('.back-btn').addEventListener('click', e => {
+            if (reduceMotion || e.metaKey || e.ctrlKey || e.shiftKey) return;
+            e.preventDefault();
+            const href = e.currentTarget.href;
+            document.querySelector('.curtain').classList.add('cover');
+            setTimeout(() => { location.href = href; }, 480);
+        });
+        window.addEventListener('pageshow', e => { if (e.persisted) document.querySelector('.curtain').classList.remove('cover'); });
         $('buildBtn').onclick = finishBuild;
         $('modalClose').onclick = () => $('modal').classList.remove('show');
         $('modalConfirm').onclick = () => { $('modal').classList.remove('show'); toast(`Fabrication initiated: ${state.model.name} · ${fmt(totalPrice())}`); };
