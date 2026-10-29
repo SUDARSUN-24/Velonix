@@ -1115,7 +1115,7 @@
     function initThreeJS() {
         const container = document.getElementById('viewport');
         renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, SHOWROOM ? 1.5 : 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, SHOWROOM ? 1.25 : 2));
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
@@ -3517,7 +3517,7 @@
     function driveShowroom(dt) {
         const V = vehicle, inside = state.view === 'interior';
         const k = 1 - Math.exp(-dt * 2.4);
-        show.ox = lerp(show.ox, inside ? 0 : show.x, k); show.oy = lerp(show.oy, inside ? 0 : show.y, k);
+        show.ox = lerp(show.ox, show.x, k); show.oy = lerp(show.oy, show.y, k);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         if (w && h) camera.setViewOffset(w, h, -show.ox * w, -show.oy * h, w, h);
         if (V && !camTween && !inside) {

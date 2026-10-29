@@ -14,19 +14,20 @@
 
   // Camera goals per chapter (see driveShowroom in customize.html). x/y slide the vehicle across the screen.
   const PRESETS = {
-    hero:   { az: 0.85, el: 0.17, dist: 1.0,  ty: 0,     x: 0.19, y: 0.03, drift: 0.1 },
+    hero:   { az: 0.85, el: 0.23, dist: 1.0,  ty: 0,     x: 0.19, y: 0.03, drift: 0.1 },
     paint:  { az: 1.2,  el: 0.24, dist: 0.95, ty: 0,     x: 0.2,  y: 0,    drift: 0.05 },
     wheels: { az: 0.3,  el: 0.12, dist: 0.72, ty: -0.1,  x: -0.2, y: 0,    drift: 0.03 },
     light:  { az: 0.75, el: 0.16, dist: 0.95, ty: 0,     x: 0.2,  y: 0,    drift: 0.04, env: 2, lights: 'on' },
-    cabin:  { view: 'interior' },
+    cabin:  { view: 'interior', x: 0, y: 0 },
     power:  { az: -2.3, el: 0.13, dist: 0.9,  ty: 0,     x: -0.2, y: 0,    drift: 0.05, drive: true },
     build:  { az: 0.85, el: 0.3,  dist: 1.2,  ty: 0,     x: 0,    y: 0.2,  drift: 0.16 }
   };
   const MOBILE = {
     hero: { x: 0, y: 0.15 },
     paint: { x: 0, y: -0.2 }, wheels: { x: 0, y: -0.2, dist: 0.75 }, light: { x: 0, y: -0.2 },
-    power: { x: 0, y: -0.2 }, build: { x: 0, y: -0.22, dist: 1.05 }
+    cabin: { y: -0.26 }, power: { x: 0, y: -0.2 }, build: { x: 0, y: -0.22, dist: 1.05 }
   };
+  const TYPE_DIST = { bike: 1.3 };  // the bike's fit radius is tall for its length, so pull back a little
   const CYCLE = { paint: 'paint', wheels: 'wheel' };
   const PAINTS = ['purple', 'red', 'yellow', 'white', 'blue', 'green', 'black', 'gold', 'holo', 'mgrey'];
   const ENGINE_ICON = { v8: 'fa-fire', electric: 'fa-bolt', antimatter: 'fa-atom' };
@@ -130,6 +131,7 @@
   function applyChapter(name) {
     if (!V) return;
     const p = Object.assign({}, PRESETS[name], isMobile() ? MOBILE[name] : null);
+    if (p.dist) p.dist *= TYPE_DIST[V.state.model.type] || 1;
     V.show(p);
     const env = name === 'light' && lightEnv !== null ? lightEnv : (p.env ?? themeEnv());
     V.set({ env, lights: p.lights || 'drl', drive: !!p.drive && !reduce });
