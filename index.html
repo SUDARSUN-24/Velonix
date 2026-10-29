@@ -17,7 +17,7 @@
     document.documentElement.classList.add('js', 'booting');
   </script>
   <title>Velonix Customs | Live 3D Vehicle Studio</title>
-  <meta name="description" content="Velonix Customs: design futuristic cars, bikes and trucks in a live 3D studio. Paint, wheels, light, cabin and power, all in real time.">
+  <meta name="description" content="Velonix Customs: futuristic cars, bikes and trucks in a live 3D studio. Spin them, race them in Launch Control, then build yours in the Lab.">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,11 +46,9 @@
   <header class="site-header">
     <a class="brand" href="index.html"><span class="logo">VELONIX</span><span>Customs</span></a>
     <nav class="site-nav" aria-label="Main">
-      <a href="#paint">Paint</a>
-      <a href="#wheels">Wheels</a>
-      <a href="#light">Light</a>
-      <a href="#cabin">Cabin</a>
-      <a href="#power">Power</a>
+      <a href="#about">About</a>
+      <a href="#launch">Launch Control</a>
+      <a href="#lab">The Lab</a>
     </nav>
     <div class="head-actions">
       <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"></button>
@@ -62,12 +60,9 @@
   <!-- chapter index -->
   <nav class="rail" aria-label="Sections">
     <a href="#top" data-for="hero"><span>Studio</span></a>
-    <a href="#paint" data-for="paint"><span>Paint</span></a>
-    <a href="#wheels" data-for="wheels"><span>Wheels</span></a>
-    <a href="#light" data-for="light"><span>Light</span></a>
-    <a href="#cabin" data-for="cabin"><span>Cabin</span></a>
-    <a href="#power" data-for="power"><span>Power</span></a>
-    <a href="#build" data-for="build"><span>Build</span></a>
+    <a href="#about" data-for="about"><span>About</span></a>
+    <a href="#launch" data-for="launch"><span>Launch</span></a>
+    <a href="#lab" data-for="lab"><span>The Lab</span></a>
   </nav>
 
   <main>
@@ -80,10 +75,10 @@
           <span class="line split-text">Build the</span>
           <span class="line split-text outline">impossible</span>
         </h1>
-        <p class="lead intro" style="--d:.7s">Cars, bikes and trucks you can design in real time. Paint, wheels, light, cabin and power, rendered live in front of you.</p>
+        <p class="lead intro" style="--d:.7s">Five machines from the Velonix studio, rendered live. Spin them, switch between them, then take one for a launch run.</p>
         <div class="hero-actions intro" style="--d:.85s">
-          <a class="btn" href="customize.html" data-build-link>Configure <span data-model-short>Spectre</span> <i class="fas fa-arrow-right"></i></a>
-          <a class="btn ghost" href="#paint"><i class="fas fa-arrow-down"></i> Explore</a>
+          <a class="btn" href="customize.html" data-build-link><span>Configure <span data-model-short>Spectre</span></span> <i class="fas fa-arrow-right"></i></a>
+          <a class="btn ghost" href="#launch"><i class="fas fa-flag-checkered"></i> Launch it</a>
         </div>
       </div>
 
@@ -116,85 +111,86 @@
       </div>
     </div>
 
-    <!-- 01 PAINT -->
-    <section class="chapter" id="paint" data-chapter="paint" data-side="left">
+    <!-- 01 ABOUT -->
+    <section class="chapter" id="about" data-chapter="about" data-side="left">
       <div class="panel">
         <div class="num" aria-hidden="true">01</div>
-        <div class="eyebrow">Paint Lab</div>
-        <h2>Seventeen finishes. <br>One that's yours.</h2>
-        <p>Solid, metallic, matte, liquid chrome and an iridescent holo-spectrum. Tap a finish and watch it flow over the body.</p>
-        <div class="opts swatches" data-opts="paint"></div>
-        <div class="opt-name" data-opt-name="paint">&nbsp;</div>
-      </div>
-    </section>
-
-    <!-- 02 WHEELS -->
-    <section class="chapter" id="wheels" data-chapter="wheels" data-side="right">
-      <div class="panel">
-        <div class="num" aria-hidden="true">02</div>
-        <div class="eyebrow">Wheel Bay</div>
-        <h2>Forged for <br>the stance.</h2>
-        <p>Y-spoke, cross-mesh, aero turbines and carbon five-spokes, each with its own size and finish.</p>
-        <div class="opts chips" data-opts="wheel"></div>
-      </div>
-    </section>
-
-    <!-- 03 LIGHT -->
-    <section class="chapter" id="light" data-chapter="light" data-side="left">
-      <div class="panel">
-        <div class="num" aria-hidden="true">03</div>
-        <div class="eyebrow">Light &amp; Scene</div>
-        <h2>Own the <br>night.</h2>
-        <p>Full-beam laser optics, underglow and three studio scenes. Neon Night is the one everyone remembers.</p>
-        <div class="opt-label">Scene</div>
-        <div class="opts chips" data-scene>
-          <button type="button" data-env="0">Studio</button>
-          <button type="button" data-env="1">Daylight</button>
-          <button type="button" data-env="2" class="on">Neon Night</button>
-        </div>
-        <div class="opt-label">Underglow</div>
-        <div class="opts swatches" data-opts="underglow"></div>
-      </div>
-    </section>
-
-    <!-- 04 CABIN -->
-    <section class="chapter" id="cabin" data-chapter="cabin" data-side="left">
-      <div class="panel">
-        <div class="num" aria-hidden="true">04</div>
-        <div class="eyebrow">Cabin</div>
-        <h2>Step <br>inside.</h2>
-        <p>Merino leather, Alcantara and ambient light that follows your mood. This is the real cabin, not a picture.</p>
-        <div class="opt-label">Upholstery</div>
-        <div class="opts swatches" data-opts="upholstery"></div>
-        <div class="opt-label" data-if-opts="ambient">Ambient light</div>
-        <div class="opts swatches" data-opts="ambient"></div>
-      </div>
-    </section>
-
-    <!-- 05 POWER -->
-    <section class="chapter" id="power" data-chapter="power" data-side="right">
-      <div class="panel">
-        <div class="num" aria-hidden="true">05</div>
-        <div class="eyebrow">Power Core</div>
-        <h2>Pick your <br>heartbeat.</h2>
-        <p>Combustion, Ion Drive electric or the experimental Dark Matter Core. The numbers update the moment you switch.</p>
-        <div class="opts cards" data-opts="engine"></div>
-        <dl class="perf">
-          <div><dt>Power</dt><dd><b data-perf="hp">0</b> hp</dd></div>
-          <div><dt>0–100</dt><dd><b data-perf="zero">0</b> s</dd></div>
-          <div><dt>Top</dt><dd><b data-perf="top">0</b> km/h</dd></div>
+        <div class="eyebrow">About Velonix</div>
+        <h2>We don't modify. <br>We reimagine.</h2>
+        <p>Engineers, designers and dreamers bringing the future of customization to life. Performance tuning, full-body redesigns or experimental tech, every machine we build is one of one.</p>
+        <ul class="checklist">
+          <li><i class="fas fa-gauge-high"></i><div><b>Performance tuning</b><span>Engines, aero and chassis set up for the way you drive.</span></div></li>
+          <li><i class="fas fa-pen-ruler"></i><div><b>Full-body redesign</b><span>Paint, wheels, lighting and trim. Every surface is yours.</span></div></li>
+          <li><i class="fas fa-microchip"></i><div><b>Future tech</b><span>Electric and experimental drivetrains, smart cabin systems.</span></div></li>
+        </ul>
+        <dl class="stats">
+          <div><dt>Platforms</dt><dd data-count="5">5</dd></div>
+          <div><dt>Finishes</dt><dd data-count="17">17</dd></div>
+          <div><dt>Scenes</dt><dd data-count="3">3</dd></div>
+          <div><dt>Orbit</dt><dd data-count="360" data-suffix="°">360°</dd></div>
         </dl>
       </div>
     </section>
 
-    <!-- BUILD CTA -->
-    <section class="chapter final" id="build" data-chapter="build">
-      <div class="final-copy">
-        <div class="eyebrow">Configurator Lab</div>
-        <h2 class="split-text">Your build starts here</h2>
-        <p>Everything you picked on this page comes with you. Doors, hood and trunk open, live pricing, and a full build sheet when you're done.</p>
-        <a class="btn big" href="customize.html" data-build-link>Enter the Lab <i class="fas fa-arrow-right"></i></a>
-        <div class="build-sum" data-build-sum></div>
+    <!-- 02 LAUNCH CONTROL (mini-game) -->
+    <section class="chapter" id="launch" data-chapter="launch" data-side="right">
+      <div class="panel launch" data-launch>
+        <div class="num" aria-hidden="true">02</div>
+        <div class="eyebrow">Launch Control</div>
+        <h2>Beat the <br>factory time.</h2>
+        <p class="how">Hold to rev. Keep the needle in the <b class="g">green zone</b> when the light turns green, then tap when <b class="s">SHIFT</b> flashes.</p>
+
+        <div class="lc-top">
+          <div class="tree" data-lc-tree aria-hidden="true"><i></i><i></i><i></i><i class="go"></i></div>
+          <div class="lc-car"><b data-lc-model>Velonix Spectre</b><small>Factory 0–100 <em data-lc-factory>3.9 s</em> · Best <em data-lc-best>—</em></small></div>
+          <button class="mute" type="button" data-lc-mute aria-pressed="false" title="Mute engine sound"><i class="fas fa-volume-high"></i></button>
+        </div>
+
+        <div class="gauge">
+          <svg viewBox="0 22 200 96" aria-hidden="true">
+            <path class="track" d="M20 110 A80 80 0 0 1 180 110"></path>
+            <path class="zone" data-lc-zone></path>
+            <path class="redline" data-lc-red></path>
+            <g class="ticks" data-lc-ticks></g>
+            <g data-lc-needle><line class="needle" x1="100" y1="110" x2="100" y2="38"></line></g>
+            <circle class="hub" cx="100" cy="110" r="6"></circle>
+          </svg>
+          <div class="shift-light" data-lc-shift>Shift</div>
+          <div class="readouts">
+            <div><b data-lc-speed>0</b><small>km/h</small></div>
+            <div><b data-lc-time>0.00</b><small>sec</small></div>
+            <div><b data-lc-gear>N</b><small>gear</small></div>
+          </div>
+        </div>
+
+        <button class="btn big lc-btn" type="button" data-lc-btn>Hold to rev</button>
+        <div class="lc-result" data-lc-result aria-live="polite"></div>
+        <div class="lc-models" role="group" aria-label="Launch vehicle">
+          <button type="button" data-lc-pick="spectre">Spectre</button>
+          <button type="button" data-lc-pick="vortex">Vortex</button>
+          <button type="button" data-lc-pick="behemoth">Behemoth</button>
+          <button type="button" data-lc-pick="hauler">Hauler</button>
+          <button type="button" data-lc-pick="titan">Titan</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 THE LAB -->
+    <section class="chapter" id="lab" data-chapter="lab" data-side="left">
+      <div class="panel wide">
+        <div class="num" aria-hidden="true">03</div>
+        <div class="eyebrow">Inside the Lab</div>
+        <h2>Your build happens <br>in the Lab.</h2>
+        <p>The configurator is where every Velonix takes shape. Open it with the vehicle you're looking at and make it yours.</p>
+        <ul class="lab-grid">
+          <li><i class="fas fa-palette"></i><b>17 paint finishes</b><span>Solid, metallic, matte, chrome and holo.</span></li>
+          <li><i class="fas fa-circle-notch"></i><b>Wheels &amp; brakes</b><span>Designs, sizes, finishes and calipers.</span></li>
+          <li><i class="fas fa-lightbulb"></i><b>Light &amp; glass</b><span>Laser optics, underglow and tint.</span></li>
+          <li><i class="fas fa-couch"></i><b>Cabin</b><span>Leather, Alcantara and ambient light.</span></li>
+          <li><i class="fas fa-atom"></i><b>Power core</b><span>Combustion, Ion Drive or Dark Matter.</span></li>
+          <li><i class="fas fa-receipt"></i><b>Live pricing</b><span>Price and performance update as you go.</span></li>
+        </ul>
+        <a class="btn" href="customize.html" data-build-link><span>Open <span data-model-short>Spectre</span> in the Lab</span> <i class="fas fa-arrow-right"></i></a>
       </div>
     </section>
   </main>

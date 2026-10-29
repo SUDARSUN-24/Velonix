@@ -1,6 +1,6 @@
 // Velonix Home (index.html): drives the live 3D studio behind the page.
 // The studio is customize.html?showroom=1 in a same-origin iframe; its window.velonix API
-// moves the camera (show/nudge/scrub), swaps vehicles and applies options quietly.
+// moves the camera (show/nudge/scrub/kick), swaps vehicles and runs the wheels. Customizing stays in the Lab.
 (() => {
   const root = document.documentElement;
   const $ = (s, el = document) => el.querySelector(s);
@@ -8,37 +8,39 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile = () => innerWidth <= 760;
   const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
 
-  const SHORT = { spectre: 'Spectre', vortex: 'Vortex', behemoth: 'Behemoth', hauler: 'Hauler', titan: 'Titan' };
-  const ORDER = Object.keys(SHORT);
+  // Kept here too so the page (and Launch Control) works before or without the 3D studio
+  const MODELS = {
+    spectre:  { name: 'Velonix Spectre',    short: 'Spectre',  type: 'car',   zero: 3.9 },
+    vortex:   { name: 'Apex Vortex',        short: 'Vortex',   type: 'car',   zero: 2.6 },
+    behemoth: { name: 'Cyberdyne Behemoth', short: 'Behemoth', type: 'car',   zero: 4.1 },
+    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck', zero: 11.8 },  // no factory figure in the Lab, so an estimate
+    titan:    { name: 'Titan Edge Bike',    short: 'Titan',    type: 'bike',  zero: 3.1 }
+  };
+  const ORDER = Object.keys(MODELS);
 
-  // Camera goals per chapter (see driveShowroom in customize.html). x/y slide the vehicle across the screen.
+  // Camera goals per section (see driveShowroom in customize.html). x/y slide the vehicle across the screen.
   const PRESETS = {
-    hero:   { az: 0.85, el: 0.23, dist: 1.0,  ty: 0,     x: 0.19, y: 0.03, drift: 0.1 },
-    paint:  { az: 1.2,  el: 0.24, dist: 0.95, ty: 0,     x: 0.2,  y: 0,    drift: 0.05 },
-    wheels: { az: 0.3,  el: 0.12, dist: 0.72, ty: -0.1,  x: -0.2, y: 0,    drift: 0.03 },
-    light:  { az: 0.75, el: 0.16, dist: 0.95, ty: 0,     x: 0.2,  y: 0,    drift: 0.04, env: 2, lights: 'on' },
-    cabin:  { view: 'interior', x: 0, y: 0 },
-    power:  { az: -2.3, el: 0.13, dist: 0.9,  ty: 0,     x: -0.2, y: 0,    drift: 0.05, drive: true },
-    build:  { az: 0.85, el: 0.3,  dist: 1.2,  ty: 0,     x: 0,    y: 0.2,  drift: 0.16 }
+    hero:   { az: 0.85, el: 0.23, dist: 1.0,  ty: 0, x: 0.19, y: 0.03, drift: 0.1 },
+    about:  { az: 1.2,  el: 0.24, dist: 1.1,  ty: 0, x: 0.2,  y: 0,    drift: 0.05 },
+    launch: { az: 0.02, el: 0.1,  dist: 1.3,  ty: 0, x: -0.2, y: 0.02, drift: 0 },
+    lab:    { az: -2.3, el: 0.2,  dist: 1.15, ty: 0, x: 0.26, y: 0,    drift: 0.08 }
   };
   const MOBILE = {
     hero: { x: 0, y: 0.15 },
-    paint: { x: 0, y: -0.2 }, wheels: { x: 0, y: -0.2, dist: 0.75 }, light: { x: 0, y: -0.2 },
-    cabin: { y: -0.26 }, power: { x: 0, y: -0.2 }, build: { x: 0, y: -0.22, dist: 1.05 }
+    about: { x: 0, y: -0.2 }, launch: { x: 0, y: -0.3, dist: 1.75 }, lab: { x: 0, y: -0.22 }
   };
   const TYPE_DIST = { bike: 1.3 };  // the bike's fit radius is tall for its length, so pull back a little
-  const CYCLE = { paint: 'paint', wheels: 'wheel' };
-  const PAINTS = ['purple', 'red', 'yellow', 'white', 'blue', 'green', 'black', 'gold', 'holo', 'mgrey'];
-  const ENGINE_ICON = { v8: 'fa-fire', electric: 'fa-bolt', antimatter: 'fa-atom' };
   const RAIL_MS = 9000;
 
   let V = null;               // studio API once ready
+  let modelId = 'spectre';
   let chapter = 'hero';
-  let lightEnv = null;        // scene picked by the visitor in the Light chapter
   let railP = 0, railStopped = reduce;
-  const touched = new Set();  // option groups changed on this page, carried into the Lab
-  const handPicked = new Set(); // groups the visitor picked by hand (stops auto-cycling)
 
   /* ---------- split text ---------- */
   $$('.split-text').forEach(el => {
@@ -116,7 +118,8 @@
     clearTimeout(bootTimeout);
     root.classList.remove('no3d');
     root.classList.add('studio-ready');
-    renderOpts(); updateHud(true); applyChapter(chapter);
+    if (V.state.model.id !== modelId) V.setModel(V.models.find(m => m.id === modelId));
+    updateHud(true); applyChapter(chapter);
     bootTick(performance.now());
     setTimeout(endBoot, 450);
   }
@@ -131,11 +134,9 @@
   function applyChapter(name) {
     if (!V) return;
     const p = Object.assign({}, PRESETS[name], isMobile() ? MOBILE[name] : null);
-    if (p.dist) p.dist *= TYPE_DIST[V.state.model.type] || 1;
+    if (p.dist) p.dist *= TYPE_DIST[MODELS[modelId].type] || 1;
     V.show(p);
-    const env = name === 'light' && lightEnv !== null ? lightEnv : (p.env ?? themeEnv());
-    V.set({ env, lights: p.lights || 'drl', drive: !!p.drive && !reduce });
-    $$('[data-scene] button').forEach(b => b.classList.toggle('on', +b.dataset.env === env));
+    V.set(LC.busy() ? { env: themeEnv() } : { env: themeEnv(), lights: 'drl', drive: false });
   }
 
   /* ---------- text effects ---------- */
@@ -168,118 +169,253 @@
 
   /* ---------- hero HUD + model rail ---------- */
   function updateHud(first) {
-    const m = V.state.model, p = V.perf();
-    const nameEl = $('[data-hud="name"]');
-    if (first) nameEl.textContent = m.name; else decode(nameEl, m.name);
-    decode($('[data-hud="eyebrow"]'), m.eyebrow);
-    nameEl.classList.remove('glitch'); void nameEl.offsetWidth; nameEl.classList.add('glitch');
-    countTo($('[data-hud="hp"]'), p.hp);
-    countTo($('[data-hud="zero"]'), p.zero, oneDp);
-    countTo($('[data-hud="top"]'), p.top);
-    countTo($('[data-hud="price"]'), m.price, fmt);
-    $$('[data-model-short]').forEach(el => el.textContent = SHORT[m.id]);
-    $$('.model-rail button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.model === m.id)));
-    updatePerf();
+    if (V) {
+      const m = V.state.model, p = V.perf();
+      const nameEl = $('[data-hud="name"]');
+      if (first) nameEl.textContent = m.name; else decode(nameEl, m.name);
+      decode($('[data-hud="eyebrow"]'), m.eyebrow);
+      nameEl.classList.remove('glitch'); void nameEl.offsetWidth; nameEl.classList.add('glitch');
+      countTo($('[data-hud="hp"]'), p.hp);
+      countTo($('[data-hud="zero"]'), p.zero, oneDp);
+      countTo($('[data-hud="top"]'), p.top);
+      countTo($('[data-hud="price"]'), m.price, fmt);
+    }
+    $$('[data-model-short]').forEach(el => el.textContent = MODELS[modelId].short);
+    $$('.model-rail button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.model === modelId)));
+    LC.onModel();
   }
   function setModel(id) {
-    if (!V || V.state.model.id === id) return;
-    V.setModel(V.models.find(m => m.id === id));
+    if (id === modelId || LC.busy()) return;
+    modelId = id;
     railP = 0;
-    renderOpts(); updateHud(false); applyChapter(chapter);
+    if (V) V.setModel(V.models.find(m => m.id === id));
+    updateHud(false); applyChapter(chapter);
   }
   $$('.model-rail button').forEach(b => b.addEventListener('click', () => { railStopped = true; setModel(b.dataset.model); }));
 
-  /* ---------- chapter options ---------- */
-  function swatchBg(hex, finish) {
-    if (!hex) return '#333';
-    if (finish === 'chrome') return `radial-gradient(circle at 35% 30%, #fff 0%, ${hex} 35%, #3a2a08 100%)`;
-    if (finish === 'iridescent') return 'conic-gradient(from 30deg, #7cf, #c7f, #f9c, #fd8, #8fd, #7cf)';
-    if (finish === 'matte') return hex;
-    return `radial-gradient(circle at 35% 30%, rgba(255,255,255,.55) 0%, ${hex} 38%, rgba(0,0,0,.65) 100%), ${hex}`;
-  }
-  function renderOpts() {
-    $$('[data-opts]').forEach(box => {
-      const group = box.dataset.opts;
-      let list = V.choices(group);
-      if (group === 'paint') list = PAINTS.map(id => list.find(c => c.id === id)).filter(Boolean);
-      box.hidden = !list.length;
-      const label = $(`[data-if-opts="${group}"]`); if (label) label.hidden = !list.length;
-      const cur = V.state.sel[group];
-      if (box.classList.contains('swatches')) {
-        box.innerHTML = list.map(c => `<button type="button" data-id="${c.id}" title="${c.name}" aria-label="${c.name}" class="${c.id === cur ? 'on' : ''}" style="background:${swatchBg(c.hex, c.finish)}"></button>`).join('');
-      } else if (box.classList.contains('cards')) {
-        box.innerHTML = list.map(c => `<button type="button" data-id="${c.id}" class="${c.id === cur ? 'on' : ''}"><i class="fas ${ENGINE_ICON[c.id] || 'fa-gauge-high'}"></i><span><b>${c.name}</b><small>${c.desc || ''}</small></span><span class="pr">${c.price ? '+' + fmt(c.price) : 'Included'}</span></button>`).join('');
-      } else {
-        box.innerHTML = list.map(c => `<button type="button" data-id="${c.id}" class="${c.id === cur ? 'on' : ''}">${c.name}</button>`).join('');
+  /* ---------- Launch Control: rev, launch on green, shift on the light ---------- */
+  const LC = (() => {
+    const box = $('[data-launch]');
+    const q = k => $(`[data-lc-${k}]`, box);
+    const btn = q('btn'), needle = q('needle'), lights = $$('[data-lc-tree] i', box), shiftLight = q('shift');
+    const MAX = 9000, ZONE = [5200, 7000], SHIFT_AT = 7800, LIMIT = 8600, IDLE = 900;
+    const GEARS = [0, 0.36, 0.68, 1];   // 0-100 split across three gears
+    const PITCH = { car: 1, truck: 0.55, bike: 1.45 };
+    let st = 'idle', rpm = IDLE, throttle = false, timers = [], run = null;
+    let muted = store.get('velonix-sound-off', false);
+
+    // gauge geometry: 0 rpm on the left, MAX on the right, over the top
+    const pt = (r, rad = 80) => { const a = Math.PI * (1 - r / MAX); return [100 + rad * Math.cos(a), 110 - rad * Math.sin(a)]; };
+    const arc = (a, b) => { const [x0, y0] = pt(a), [x1, y1] = pt(b); return `M${x0.toFixed(1)} ${y0.toFixed(1)} A80 80 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+    q('zone').setAttribute('d', arc(ZONE[0], ZONE[1]));
+    q('red').setAttribute('d', arc(8000, MAX));
+    q('ticks').innerHTML = Array.from({ length: 10 }, (_, i) => {
+      const [x0, y0] = pt(i * 1000, 72), [x1, y1] = pt(i * 1000, 80), [tx, ty] = pt(i * 1000, 60);
+      return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"></line><text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}">${i}</text>`;
+    }).join('');
+
+    /* engine note: two detuned oscillators through a resonant low-pass, pitched by rpm */
+    const sound = {
+      ctx: null,
+      init() {
+        if (this.ctx || muted) { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); return; }
+        const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+        const c = this.ctx = new AC();
+        this.out = c.createGain(); this.out.gain.value = 0;
+        this.lp = c.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.Q.value = 5;
+        this.a = c.createOscillator(); this.a.type = 'sawtooth';
+        this.b = c.createOscillator(); this.b.type = 'square';
+        const half = c.createGain(); half.gain.value = 0.5;
+        this.a.connect(this.lp); this.b.connect(half); half.connect(this.lp);
+        this.lp.connect(this.out); this.out.connect(c.destination);
+        this.a.start(); this.b.start();
+      },
+      update(load, on) {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime, f = (16 + rpm * 0.048) * (PITCH[MODELS[modelId].type] || 1);
+        this.a.frequency.setTargetAtTime(f, t, 0.03);
+        this.b.frequency.setTargetAtTime(f * 0.501, t, 0.03);
+        this.lp.frequency.setTargetAtTime(260 + rpm * 0.22 + load * 700, t, 0.05);
+        this.out.gain.setTargetAtTime(on && !muted ? 0.03 + load * 0.035 : 0, t, on ? 0.06 : 0.25);
       }
-      showName(group);
-    });
-  }
-  function showName(group) {
-    const el = $(`[data-opt-name="${group}"]`); if (!el || !V) return;
-    const c = V.choices(group).find(x => x.id === V.state.sel[group]);
-    if (c) decode(el, c.name);
-  }
-  function pick(group, id) {
-    V.quiet(group, id);
-    touched.add(group);
-    $$(`[data-opts="${group}"] button`).forEach(b => b.classList.toggle('on', b.dataset.id === id));
-    showName(group);
-    if (group === 'engine') updateHud(false);
-  }
-  $$('[data-opts]').forEach(box => box.addEventListener('click', e => {
-    const b = e.target.closest('button[data-id]'); if (!b || !V) return;
-    handPicked.add(box.dataset.opts);
-    pick(box.dataset.opts, b.dataset.id);
-  }));
-  $$('[data-scene] button').forEach(b => b.addEventListener('click', () => { lightEnv = +b.dataset.env; applyChapter(chapter); }));
-  function updatePerf() {
-    if (!V) return;
-    const p = V.perf();
-    countTo($('[data-perf="hp"]'), p.hp);
-    countTo($('[data-perf="zero"]'), p.zero, oneDp);
-    countTo($('[data-perf="top"]'), p.top);
-  }
-  // Paint and wheels show themselves off while their chapter is on screen
-  setInterval(() => {
-    const group = CYCLE[chapter];
-    if (!V || !group || reduce || handPicked.has(group) || document.hidden) return;
-    const ids = $$(`[data-opts="${group}"] button`).map(b => b.dataset.id);
-    if (ids.length < 2) return;
-    pick(group, ids[(ids.indexOf(V.state.sel[group]) + 1) % ids.length]);
-  }, 2600);
-
-  function buildSummary() {
-    if (!V) return;
-    const rows = [['Model', V.state.model.name]];
-    for (const [g, label] of [['paint', 'Paint'], ['wheel', 'Wheels'], ['upholstery', 'Cabin'], ['engine', 'Power']]) {
-      const c = V.choices(g).find(x => x.id === V.state.sel[g]);
-      if (c) rows.push([label, c.name]);
+    };
+    const muteBtn = q('mute');
+    function paintMute() {
+      muteBtn.setAttribute('aria-pressed', String(muted));
+      muteBtn.title = muted ? 'Turn engine sound on' : 'Mute engine sound';
+      muteBtn.innerHTML = `<i class="fas ${muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>`;
     }
-    rows.push(['Est.', fmt(V.perf().price)]);
-    $('[data-build-sum]').innerHTML = rows.map(([a, b]) => `<span>${a} <b>${b}</b></span>`).join('');
-  }
+    paintMute();
+    muteBtn.addEventListener('click', () => { muted = !muted; store.set('velonix-sound-off', muted); paintMute(); if (!muted) sound.init(); });
 
-  /* ---------- chapters ---------- */
+    function setLights(n, go = false) {
+      lights.forEach((l, i) => l.className = i < 3 ? (i < n ? 'on' : '') : (go ? 'go on' : 'go'));
+    }
+    function label(text) { btn.textContent = text; }
+    function result(html) { q('result').innerHTML = html; }
+    const zeroFor = id => MODELS[id].zero;
+
+    function start() {
+      st = 'stage'; run = null;
+      timers.forEach(clearTimeout); timers = [];
+      setLights(0); result(''); label('Keep it in the green');
+      q('speed').textContent = '0'; q('time').textContent = '0.00'; q('gear').textContent = 'N';
+      box.classList.add('live');
+      const green = 1500 + 500 + Math.random() * 700;
+      [500, 1000, 1500].forEach((ms, i) => timers.push(setTimeout(() => setLights(i + 1), ms)));
+      timers.push(setTimeout(go, green));
+    }
+    function go() {
+      setLights(3, true);
+      let factor, note;
+      if (rpm >= ZONE[0] && rpm <= ZONE[1]) { factor = 0.97; note = 'Perfect launch'; }
+      else if (rpm < ZONE[0]) { factor = 1 + (ZONE[0] - rpm) / ZONE[0] * 0.7; note = rpm < 2500 ? 'Stalled off the line' : 'Bogged down'; }
+      else { factor = 1 + (rpm - ZONE[1]) / (MAX - ZONE[1]) * 0.35; note = 'Wheelspin'; }
+      run = { T: zeroFor(modelId) * factor, p: 0, gear: 1, elapsed: 0, penalty: 0, stall: 0, launchRpm: rpm, notes: [note] };
+      st = 'run';
+      label('Tap to shift');
+      flash(note, factor <= 0.97);
+      if (V) V.set({ drive: true, driveRate: 0.6, lights: 'on' });
+    }
+    function shift(auto) {
+      if (!run || run.gear >= 3) return;
+      const b0 = GEARS[run.gear - 1], b1 = GEARS[run.gear], f = (run.p - b0) / (b1 - b0);
+      if (!auto && f < 0.8) { run.penalty += (b1 - run.p) * run.T * 0.35; flash('Early shift', false); run.notes.push('early shift'); }
+      else if (auto) { flash('Missed shift', false); run.notes.push('missed shift'); }
+      else flash('Clean shift', true);
+      run.gear++; run.stall = 0;
+      shiftLight.classList.remove('on');
+      q('gear').textContent = run.gear;
+    }
+    function finish() {
+      st = 'done';
+      const total = run.elapsed + run.penalty, factory = zeroFor(modelId);
+      const rating = total <= factory * 0.99 ? 'Legend' : total <= factory * 1.06 ? 'Pro' : total <= factory * 1.25 ? 'Street' : 'Rookie';
+      const bests = store.get('velonix-lc-best', {}), prev = bests[modelId];
+      const isBest = !prev || total < prev;
+      if (isBest) { bests[modelId] = +total.toFixed(2); store.set('velonix-lc-best', bests); }
+      q('time').textContent = total.toFixed(2);
+      result(`<b>${total.toFixed(2)} s</b><span class="rank r-${rating.toLowerCase()}">${rating}</span>${isBest ? '<span class="pb">New best</span>' : ''}<small>${run.notes[0]}${run.notes.length > 1 ? ' · ' + run.notes.slice(1).join(' · ') : ''} · factory ${factory.toFixed(1)} s</small>`);
+      label('Hold to go again');
+      box.classList.remove('live');
+      setTimeout(() => { if (st === 'done') setLights(0); }, 1600);
+      calm();
+      paintBest();
+    }
+    function calm() {
+      shiftLight.classList.remove('on');
+      if (V) { V.set({ drive: false, driveRate: 1, lights: 'drl' }); V.kick({ dist: 1, el: 0, shake: 0, speed: 0 }); }
+    }
+    function abort() {
+      if (st !== 'stage' && st !== 'run') return;
+      timers.forEach(clearTimeout); timers = [];
+      st = 'idle'; run = null; throttle = false;
+      setLights(0); label('Hold to rev'); result('');
+      box.classList.remove('live');
+      calm();
+    }
+    let flashT;
+    function flash(text, good) {
+      const r = q('result');
+      if (st === 'done') return;
+      r.innerHTML = `<span class="flash ${good ? 'good' : 'bad'}">${text}</span>`;
+      clearTimeout(flashT); flashT = setTimeout(() => { if (st === 'run') r.innerHTML = ''; }, 900);
+    }
+    function paintBest() {
+      const b = store.get('velonix-lc-best', {})[modelId];
+      q('best').textContent = b ? b.toFixed(2) + ' s' : '—';
+    }
+
+    function press() {
+      sound.init();
+      if (st === 'idle' || st === 'done') start();
+      if (st === 'run' && run.elapsed > 0.3) shift(false);  // a press right at green is still the launch, not a shift
+      throttle = true;
+      btn.classList.add('held');
+    }
+    function release() { throttle = false; btn.classList.remove('held'); }
+
+    btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture(e.pointerId); press(); });
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+    btn.addEventListener('lostpointercapture', release);
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+    // keyboard: Space/Enter on the button, or Space anywhere while the section is on screen (vehicle chips included)
+    addEventListener('keydown', e => {
+      if (e.repeat || !(e.code === 'Space' || (e.code === 'Enter' && document.activeElement === btn))) return;
+      if (document.activeElement !== btn && (chapter !== 'launch' || (e.target.closest('input, textarea, select, a, button') && !e.target.closest('[data-lc-pick]')))) return;
+      e.preventDefault(); press();
+    });
+    addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'Enter') release(); });
+    $$('[data-lc-pick]', box).forEach(b => b.addEventListener('click', () => setModel(b.dataset.lcPick)));
+
+    function tick(dt) {
+      let load = 0;
+      if (st === 'stage' || st === 'idle' || st === 'done') {
+        const target = throttle && st === 'stage' ? LIMIT + 300 : IDLE;
+        rpm += (target - rpm) * (target > rpm ? 1.8 : 1.4) * dt;
+        if (rpm >= LIMIT) rpm = LIMIT - 250 - Math.random() * 300;
+        load = st === 'stage' && throttle ? 1 : 0;
+        if (V && st === 'stage' && !reduce) V.kick({ shake: 0.002 + rpm / MAX * 0.008 });
+      } else if (st === 'run') {
+        run.elapsed += dt;
+        const b0 = GEARS[run.gear - 1], b1 = GEARS[run.gear];
+        if (run.p < b1) run.p = Math.min(b1, run.p + dt / run.T);
+        else if (run.gear < 3) { run.stall += dt; if (run.stall > 1.1) shift(true); }
+        const f = (run.p - b0) / (b1 - b0);
+        const from = run.gear === 1 ? Math.max(3200, run.launchRpm * 0.75) : 5300;
+        rpm = run.p >= b1 && run.gear < 3 ? LIMIT - Math.random() * 380 : from + (SHIFT_AT + 200 - from) * f;
+        shiftLight.classList.toggle('on', run.gear < 3 && f > 0.8);
+        q('speed').textContent = Math.round(100 * run.p);
+        q('time').textContent = (run.elapsed + run.penalty).toFixed(2);
+        if (run.gear === 1) q('gear').textContent = '1';
+        load = 1;
+        if (V) {
+          V.set({ driveRate: 0.6 + run.p * 3.2 });
+          V.kick(reduce ? { dist: 1 - 0.14 * run.p, speed: 4 + run.p * 16 } : { dist: 1 - 0.14 * run.p, el: -0.035, shake: 0.004 + (1 - run.p) * 0.01, speed: 4 + run.p * 16 });
+        }
+        if (run.p >= 1) finish();
+      }
+      needle.setAttribute('transform', `rotate(${(rpm / MAX * 180 - 90).toFixed(2)} 100 110)`);
+      box.classList.toggle('in-zone', st === 'stage' && rpm >= ZONE[0] && rpm <= ZONE[1]);
+      sound.update(load, st === 'stage' || st === 'run' || rpm > IDLE + 150);
+    }
+
+    return {
+      tick, abort,
+      busy: () => st === 'stage' || st === 'run',
+      onModel() {
+        q('model').textContent = MODELS[modelId].name;
+        q('factory').textContent = zeroFor(modelId).toFixed(1) + ' s';
+        $$('[data-lc-pick]', box).forEach(b => b.classList.toggle('on', b.dataset.lcPick === modelId));
+        paintBest();
+      }
+    };
+  })();
+
+  /* ---------- sections ---------- */
   const chapters = $$('.chapter');
   const io = new IntersectionObserver(entries => {
     for (const en of entries) {
       if (!en.isIntersecting) continue;
       const el = en.target, name = el.dataset.chapter;
-      el.classList.add('in');
+      if (!el.classList.contains('in')) {
+        el.classList.add('in');
+        $$('[data-count]', el).forEach(dd => countTo(dd, +dd.dataset.count, v => Math.round(v) + (dd.dataset.suffix || '')));
+      }
       if (name === chapter) continue;
+      if (chapter === 'launch') LC.abort();
       chapter = name;
       document.body.dataset.chapter = name;
       document.body.dataset.side = el.dataset.side || '';
       $$('.rail a').forEach(a => a.classList.toggle('on', a.dataset.for === name));
       $$('.site-nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + name));
-      if (name === 'build') buildSummary();
-      if (name === 'power') updatePerf();
       applyChapter(name);
     }
   }, { rootMargin: '-45% 0px -45% 0px' });
   chapters.forEach(c => io.observe(c));
   $('.rail a[data-for="hero"]').classList.add('on');
+  updateHud(true);
 
   let resizeT;
   addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => applyChapter(chapter), 200); });
@@ -303,15 +439,9 @@
   hero.addEventListener('pointerup', endDrag);
   hero.addEventListener('pointercancel', endDrag);
 
-  /* ---------- links into the Lab carry the build ---------- */
-  function buildHref() {
-    if (!V) return 'customize.html';
-    const q = new URLSearchParams({ model: V.state.model.id });
-    for (const g of touched) if (V.state.sel[g]) q.set(g, V.state.sel[g]);
-    return 'customize.html?' + q;
-  }
+  /* ---------- links into the Lab open the vehicle on screen ---------- */
   $$('[data-build-link]').forEach(a => a.addEventListener('click', e => {
-    a.href = buildHref();
+    a.href = 'customize.html?model=' + modelId;
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || reduce) return;
     e.preventDefault();
     $('.curtain').classList.add('cover');
@@ -323,23 +453,24 @@
   const header = $('.site-header'), progress = $('.progress');
   let last = performance.now();
   function loop(now) {
-    const dt = Math.min(100, now - last); last = now;
+    const dt = Math.min(100, now - last) / 1000; last = now;
     if (lenis) lenis.raf(now);
     const y = scrollY, max = document.documentElement.scrollHeight - innerHeight;
     progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
     header.classList.toggle('scrolled', y > 40);
+    LC.tick(dt);
     if (V) {
-      // gentle scroll-linked orbit inside the current chapter
+      // gentle scroll-linked orbit inside the current section (held still during a launch)
       const el = chapters.find(c => c.dataset.chapter === chapter);
       if (el && !reduce) {
         const r = el.getBoundingClientRect();
         const off = (innerHeight / 2 - (r.top + r.height / 2)) / innerHeight;
-        V.scrub(Math.max(-0.6, Math.min(0.6, off * 0.45)));
+        V.scrub(LC.busy() ? 0 : Math.max(-0.6, Math.min(0.6, off * 0.45)));
       }
       // hero auto-advances through the lineup until the visitor takes over
       if (chapter === 'hero' && !railStopped && booted && !document.hidden) {
-        railP += dt / RAIL_MS;
-        if (railP >= 1) setModel(ORDER[(ORDER.indexOf(V.state.model.id) + 1) % ORDER.length]);
+        railP += dt * 1000 / RAIL_MS;
+        if (railP >= 1) setModel(ORDER[(ORDER.indexOf(modelId) + 1) % ORDER.length]);
       }
       const active = $('.model-rail [aria-selected="true"]');
       if (active) active.style.setProperty('--p', railStopped ? 1 : Math.min(1, railP));
