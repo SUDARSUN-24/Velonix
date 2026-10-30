@@ -161,6 +161,7 @@
       border-bottom:2px solid transparent; display:flex; flex-direction:column; align-items:center; gap:5px; transition:.2s;
     }
     .tab i { font-size:1rem; }
+    .tab { line-height:1.1; text-align:center; }
     .tab:hover { color:#ddd; }
     .tab.on { color:#fff; border-bottom-color: var(--neon-color); }
     .tab.on i { color: var(--neon-color); }
@@ -407,6 +408,160 @@
     html[data-theme="light"] .tab.on { background: linear-gradient(0deg, rgba(138,18,196,.08), transparent 70%); }
     html[data-theme="light"] .progress-fill::after { display:none; }
 
+    /* ---------- LAB TOOLS: history, steps, looks, preview, sound check, garage ---------- */
+    .panel-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+    .head-tools { display:flex; gap:6px; }
+    .icon-btn {
+      width:34px; height:34px; border-radius:8px; border:1px solid #2c2c35; background:var(--panel-2); color:#cfcfd8;
+      cursor:pointer; display:grid; place-items:center; font-size:.85rem; transition:.2s; flex:none;
+    }
+    .icon-btn:hover:not(:disabled) { border-color:var(--neon-color); color:#fff; box-shadow:0 0 10px var(--neon-glow); }
+    .icon-btn:disabled { opacity:.35; cursor:default; }
+    .icon-btn.danger:hover:not(:disabled) { border-color:#ff3b5c; color:#ff3b5c; box-shadow:0 0 10px rgba(255,59,92,.35); }
+    .keys-btn { padding:8px 11px; }
+
+    .tabs { display:grid; grid-template-columns:repeat(4, 1fr); overflow:visible; }
+    .tab { padding:10px 4px 9px; font-size:.72rem; letter-spacing:.8px; position:relative; }
+    .tab .dot { position:absolute; top:8px; left:calc(50% + 10px); width:6px; height:6px; border-radius:50%; background:var(--neon-color); box-shadow:0 0 6px var(--neon-color); }
+    .tab .no { position:absolute; top:6px; left:8px; font:600 .58rem 'Orbitron', sans-serif; color:#55555f; letter-spacing:0; }
+    .tab.on .no { color:var(--neon-color); }
+
+    .steps { display:flex; justify-content:space-between; gap:10px; margin-top:20px; }
+    .step-btn {
+      flex:1; max-width:50%; display:flex; align-items:center; gap:10px; justify-content:space-between; padding:10px 14px; border-radius:6px;
+      border:1px solid #2c2c35; background:var(--panel-2); font-weight:700; letter-spacing:.5px; cursor:pointer; text-align:left; transition:.2s;
+    }
+    .step-btn span { display:flex; flex-direction:column; line-height:1.15; }
+    .step-btn small { color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:1.5px; font-size:.66rem; }
+    .step-btn:hover { border-color:var(--neon-color); }
+    .step-btn.next { margin-left:auto; text-align:right; background:rgba(188,19,254,.12); border-color:rgba(188,19,254,.6); }
+    .step-btn.next:hover { box-shadow:0 0 14px var(--neon-glow); }
+
+    .looks { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:10px; margin-bottom:10px; }
+    .look {
+      border:1px solid #24242c; background:var(--panel-2); border-radius:6px; padding:8px 8px 10px; cursor:pointer; text-align:left;
+      display:flex; flex-direction:column; gap:4px; transition:.2s; position:relative;
+    }
+    .look:hover { border-color:#4a4a55; transform:translateY(-2px); }
+    .look .art { height:40px; border-radius:4px; margin-bottom:4px; position:relative; overflow:hidden; }
+    .look .art::after { content:""; position:absolute; inset:0; background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35) 45%, transparent 60%); transform:translateX(-100%); transition:transform .6s; }
+    .look:hover .art::after { transform:translateX(100%); }
+    .look .nm { font-weight:700; font-size:.95rem; }
+    .look .ds { font-size:.76rem; color:#77778a; line-height:1.15; }
+    .wide-btn {
+      width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:11px; margin:2px 0 10px; border-radius:6px; cursor:pointer;
+      border:1px dashed #3a3a44; background:transparent; font-weight:700; letter-spacing:.5px; transition:.2s;
+    }
+    .wide-btn:hover { border-color:var(--neon-color); color:var(--neon-color); }
+    .wide-btn i { transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+    .wide-btn:hover i { transform:rotate(200deg); }
+
+    .group-sub { transition:color .2s; }
+    .group-sub.preview { color:var(--neon-color); }
+
+    .custom-color { flex-wrap:wrap; border-style:dashed; }
+    .cc-main { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .cc-main label { flex:none; }
+    .cc-main label small { color:var(--text-dim); margin-left:6px; }
+    .cc-row { display:flex; gap:8px; align-items:center; }
+    .custom-color input[type=color] { width:38px; height:30px; border:1px solid #333; border-radius:4px; padding:2px; background:var(--bg-dark); }
+    .custom-color .hex {
+      width:100px; background:var(--bg-dark); border:1px solid #333; color:var(--text-main); padding:5px 8px; border-radius:4px;
+      font:700 .9rem 'Rajdhani', sans-serif; letter-spacing:1px; text-transform:uppercase;
+    }
+    .custom-color .hex:focus { outline:none; border-color:var(--neon-color); }
+    .custom-color .hex.bad { border-color:#ff3b5c; }
+    .finish-seg { display:flex; gap:4px; width:100%; }
+    .finish-seg button { flex:1; border:1px solid #2c2c35; background:var(--bg-dark); border-radius:4px; padding:6px; cursor:pointer; font-weight:700; font-size:.82rem; transition:.2s; }
+    .finish-seg button:hover { border-color:#555; }
+    .finish-seg button.on { border-color:var(--neon-color); background:rgba(188,19,254,.14); }
+
+    .foot-row { position:relative; }
+    .price-split { color:var(--text-dim); font-size:.85rem; margin-top:1px; }
+    .delta {
+      position:absolute; left:0; top:-30px; padding:3px 10px; border-radius:20px; font:700 .78rem 'Orbitron', sans-serif; letter-spacing:.5px;
+      opacity:0; pointer-events:none; background:rgba(188,19,254,.18); border:1px solid var(--neon-color); color:#fff;
+    }
+    .delta.down { background:rgba(43,255,136,.12); border-color:#2bff88; color:#9dffc8; }
+    .delta.show { animation:deltaPop 1.4s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes deltaPop { 0% { opacity:0; transform:translateY(10px) scale(.8); } 15% { opacity:1; transform:none; } 75% { opacity:1; } 100% { opacity:0; transform:translateY(-10px); } }
+
+    .sound-check { background:var(--panel-2); border:1px solid #24242c; border-radius:8px; padding:14px 14px 12px; position:relative; overflow:hidden; transition:border-color .3s, box-shadow .3s; }
+    .sound-check.running { border-color:rgba(188,19,254,.55); box-shadow:inset 0 0 calc(10px + var(--throb, 0) * 40px) rgba(188,19,254,.18); }
+    .sound-check.limit { border-color:#ff3b5c; }
+    .sc-top { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
+    .sc-rpm { font:800 1.7rem 'Orbitron', sans-serif; font-variant-numeric:tabular-nums; }
+    .sc-top small { color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-size:.72rem; margin-left:4px; }
+    .sc-state { font:600 .66rem 'Orbitron', sans-serif; letter-spacing:.16em; text-transform:uppercase; color:var(--text-dim); display:inline-flex; align-items:center; gap:6px; }
+    .sound-check.running .sc-state { color:var(--neon-color); }
+    .sound-check.running .sc-state::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--neon-color); box-shadow:0 0 8px var(--neon-color); animation:livePulse 1s ease-in-out infinite; }
+    .sound-check.limit .sc-state { color:#ff3b5c; }
+    .sc-bar { height:8px; background:#1d1d24; border-radius:4px; overflow:hidden; margin:10px 0 12px; position:relative; }
+    .sc-bar i { display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg, #7a12b8, var(--neon-color) 70%, #ff3b5c); box-shadow:0 0 10px var(--neon-color); }
+    .sc-bar b { position:absolute; top:0; bottom:0; width:2px; background:#ff3b5c; opacity:.8; }
+    .sc-btns { display:flex; gap:8px; }
+    .sc-rev {
+      flex:1; padding:13px; border:none; border-radius:6px; cursor:pointer; background:var(--neon-color); color:#fff; touch-action:none; user-select:none; -webkit-user-select:none;
+      font:700 .85rem 'Orbitron', sans-serif; letter-spacing:1.5px; text-transform:uppercase; box-shadow:0 0 16px rgba(188,19,254,.35); transition:transform .12s, box-shadow .2s, background .2s;
+    }
+    .sc-rev.held { transform:scale(.97); background:#d020ff; box-shadow:0 0 34px var(--neon-color); }
+    .sound-check.limit .sc-rev.held { background:#ff3b5c; box-shadow:0 0 34px #ff3b5c; }
+    .sc-stop { width:46px; height:auto; }
+    .sc-vol { display:flex; align-items:center; gap:10px; margin-top:12px; color:var(--text-dim); font-size:.85rem; }
+    .sc-vol input { flex:1; accent-color:var(--neon-color); }
+    .sc-vol em { font-style:normal; width:34px; text-align:right; font-weight:700; }
+    .sc-hint { color:var(--text-dim); font-size:.84rem; margin-top:8px; line-height:1.3; }
+
+    .share-row { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:10px; }
+    .act-btn {
+      display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border:1px solid #2c2c35; background:var(--panel-2);
+      border-radius:6px; cursor:pointer; font-weight:700; font-size:.85rem; transition:.2s;
+    }
+    .act-btn i { font-size:1.05rem; color:var(--neon-color); }
+    .act-btn:hover { border-color:var(--neon-color); transform:translateY(-2px); }
+    .save-row { display:flex; gap:8px; margin-bottom:12px; }
+    .save-row input {
+      flex:1; min-width:0; background:var(--panel-2); border:1px solid #2c2c35; color:var(--text-main); border-radius:6px; padding:9px 12px;
+      font:600 .95rem 'Rajdhani', sans-serif;
+    }
+    .save-row input:focus { outline:none; border-color:var(--neon-color); }
+    .save-row button { flex-direction:row; padding:9px 16px; }
+    .garage { display:grid; gap:8px; margin-bottom:10px; }
+    .build { display:grid; grid-template-columns:92px minmax(0,1fr) auto; gap:12px; align-items:center; padding:7px; border:1px solid #24242c; border-radius:6px; background:var(--panel-2); }
+    .build img, .build .noimg { width:92px; height:52px; object-fit:cover; border-radius:4px; background:#000; display:grid; place-items:center; color:#444; }
+    .build .nm { font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .build .meta { color:var(--text-dim); font-size:.8rem; line-height:1.25; }
+    .build .tag { color:var(--neon-color); font-weight:700; }
+    .build .acts { display:flex; gap:6px; }
+    .empty { color:var(--text-dim); font-size:.95rem; padding:4px 0 8px; }
+
+    .keys-pop {
+      position:fixed; top:72px; right:20px; z-index:120; width:290px; padding:16px 18px; border-radius:10px; display:none;
+      background:rgba(12,12,15,.96); border:1px solid var(--neon-color); box-shadow:0 0 30px rgba(188,19,254,.25); backdrop-filter:blur(10px);
+    }
+    .keys-pop.show { display:block; animation:groupIn .35s cubic-bezier(.2,.8,.2,1) both; }
+    .keys-pop h4 { font-size:.78rem; letter-spacing:2px; color:var(--neon-color); margin-bottom:10px; }
+    .keys-pop ul { list-style:none; display:grid; gap:7px; }
+    .keys-pop li { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:.92rem; }
+    kbd { font:600 .7rem 'Orbitron', sans-serif; padding:3px 7px; border-radius:4px; border:1px solid #3a3a44; border-bottom-width:2px; background:#141418; color:#ddd; white-space:nowrap; }
+
+    html[data-theme="light"] .icon-btn, html[data-theme="light"] .step-btn, html[data-theme="light"] .look, html[data-theme="light"] .sound-check,
+    html[data-theme="light"] .act-btn, html[data-theme="light"] .build, html[data-theme="light"] .save-row input { border-color:#dcd8e8; color:#2a2440; }
+    html[data-theme="light"] .icon-btn:hover:not(:disabled) { color:var(--neon-color); }
+    html[data-theme="light"] .step-btn.next { background:rgba(138,18,196,.07); border-color:rgba(138,18,196,.5); }
+    html[data-theme="light"] .tab .no { color:#b0abc4; }
+    html[data-theme="light"] .look .ds { color:#7a7690; }
+    html[data-theme="light"] .wide-btn { border-color:#cfcbd9; color:#2a2440; }
+    html[data-theme="light"] .custom-color input[type=color], html[data-theme="light"] .custom-color .hex, html[data-theme="light"] .finish-seg button { background:#fff; border-color:#dcd8e8; color:#2a2440; }
+    html[data-theme="light"] .finish-seg button.on { background:rgba(138,18,196,.08); border-color:var(--neon-color); }
+    html[data-theme="light"] .sc-bar { background:#e1def0; }
+    html[data-theme="light"] .sc-rev { color:#fff; }
+    html[data-theme="light"] .delta { color:#3a0d57; background:rgba(138,18,196,.1); }
+    html[data-theme="light"] .delta.down { color:#0b6b3a; background:rgba(15,157,88,.1); border-color:#0f9d58; }
+    html[data-theme="light"] .build img, html[data-theme="light"] .build .noimg { background:#e4e6ec; }
+    html[data-theme="light"] .keys-pop { background:rgba(255,255,255,.97); }
+    html[data-theme="light"] kbd { background:#f4f3f9; border-color:#cfcbd9; color:#2a2440; }
+
     /* ---------- RESPONSIVE ---------- */
     @media (max-width: 1100px) { .app { grid-template-columns: minmax(0,1fr) 370px; } }
     @media (max-width: 900px) {
@@ -430,6 +585,8 @@
       .views { bottom:12px; max-width: calc(100% - 24px); overflow-x:auto; }
       .views button { padding:7px 11px; font-size:.8rem; }
       .readout, .hud { display:none; }
+      .keys-btn, .keys-pop { display:none !important; }
+      .delta { top:-26px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -460,10 +617,26 @@
   <header>
     <div class="brand"><h1>VELONIX</h1><span>Configurator Lab</span></div>
     <div class="head-actions">
+      <button class="theme-toggle keys-btn" type="button" id="keysBtn" title="Keyboard shortcuts (?)" aria-expanded="false" aria-controls="keysPop"><i class="fas fa-keyboard"></i></button>
       <button class="theme-toggle" type="button" id="themeToggle" aria-pressed="false"></button>
       <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Exit Lab</a>
     </div>
   </header>
+
+  <div class="keys-pop" id="keysPop" role="dialog" aria-label="Keyboard shortcuts">
+    <h4>KEYBOARD</h4>
+    <ul>
+      <li>Rev the engine <span><kbd>Space</kbd></span></li>
+      <li>Engine on / off <span><kbd>E</kbd></span></li>
+      <li>Camera views <span><kbd>1</kbd> – <kbd>6</kbd></span></li>
+      <li>Previous / next step <span><kbd>←</kbd> <kbd>→</kbd></span></li>
+      <li>Lights <span><kbd>L</kbd></span></li>
+      <li>Doors <span><kbd>D</kbd></span></li>
+      <li>Auto rotate <span><kbd>R</kbd></span></li>
+      <li>Undo / redo <span><kbd>Ctrl Z</kbd> <kbd>Ctrl Y</kbd></span></li>
+      <li>Show this list <span><kbd>?</kbd></span></li>
+    </ul>
+  </div>
 
   <div class="app">
     <section class="stage">
@@ -516,15 +689,20 @@
 
     <aside class="panel">
       <div class="panel-head">
-        <div class="lbl">Your build</div>
-        <div class="model" id="panelModel">—</div>
+        <div><div class="lbl">Your build</div><div class="model" id="panelModel">—</div></div>
+        <div class="head-tools">
+          <button class="icon-btn" type="button" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo" disabled><i class="fas fa-rotate-left"></i></button>
+          <button class="icon-btn" type="button" id="redoBtn" title="Redo (Ctrl+Y)" aria-label="Redo" disabled><i class="fas fa-rotate-right"></i></button>
+          <button class="icon-btn" type="button" id="resetBtn" title="Reset to standard spec" aria-label="Reset build"><i class="fas fa-arrows-rotate"></i></button>
+        </div>
       </div>
       <nav class="tabs" id="tabs"></nav>
       <div class="panel-body" id="panelBody"></div>
       <div class="panel-foot">
         <div class="foot-row">
-          <div><div class="lbl">Est. Build Cost</div><div class="total-price" id="totalPrice">$0</div></div>
+          <div><div class="lbl">Est. Build Cost</div><div class="total-price" id="totalPrice">$0</div><div class="price-split" id="priceSplit"></div></div>
           <div class="monthly" id="monthly"></div>
+          <span class="delta" id="priceDelta" aria-hidden="true"></span>
         </div>
         <button class="checkout-btn" id="buildBtn">INITIATE BUILD</button>
       </div>
@@ -543,6 +721,7 @@
     </div>
   </div>
 
+  <script src="engine-audio.js"></script>
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -3072,6 +3251,7 @@
     function animate() {
         requestAnimationFrame(animate);
         const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+        labEngine.tick(dt);
         const V = vehicle;
         if (V) {
             const k = 1 - Math.exp(-dt * 4.5);
@@ -3094,6 +3274,8 @@
                 if (s.front) s.steer.rotation.y = Math.sin(t * 0.7) * 0.28 * driveSpeed * (s.steerSign ?? 1);
             }
             if (V.onFrame) V.onFrame(dt, t, driveSpeed);
+            const vb = labEngine.vibe(dt, t);
+            V.group.position.y = vb ? vb.y : 0; V.group.rotation.x = vb ? vb.roll : 0;
             if (V.extras.core) V.extras.core.scale.setScalar(state.sel.engine === 'antimatter' ? 1 + Math.sin(t * 4) * 0.12 : 1);
         }
         if (camTween) {
@@ -3300,32 +3482,52 @@
 
     function priceLabel(p) { return p === 0 ? 'Included' : (p > 0 ? '+' : '') + fmt(p); }
 
+    function visibleTabs() { return TABS.filter(t => t.id === 'model' || t.id === 'summary' || groupsFor(t.id).length); }
+    function defaultId(g) { const cs = choicesFor(g); return (cs.find(c => c.id === g.def) || cs[0]).id; }
+    function tabChanged(id) { return groupsFor(id).some(g => state.sel[g.id] !== defaultId(g)); }
+
     function renderTabs() {
-        const tabs = TABS.filter(t => t.id === 'model' || t.id === 'summary' || groupsFor(t.id).length);
+        const tabs = visibleTabs();
         if (!tabs.find(t => t.id === state.tab)) state.tab = 'model';
-        $('tabs').innerHTML = tabs.map(t => `<button class="tab ${t.id === state.tab ? 'on' : ''}" data-tab="${t.id}"><i class="fas ${t.icon}"></i>${t.name}</button>`).join('');
-        $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => {
-            if (state.tab === b.dataset.tab) return;
-            state.tab = b.dataset.tab; renderTabs(); renderPanel();
-            const body = $('panelBody'); body.scrollTop = 0;
-            body.classList.remove('swap'); void body.offsetWidth; body.classList.add('swap');
-            clearTimeout(body._swap); body._swap = setTimeout(() => body.classList.remove('swap'), 900);
-        });
+        $('tabs').innerHTML = tabs.map((t, i) => `<button class="tab ${t.id === state.tab ? 'on' : ''}" data-tab="${t.id}"><span class="no">${String(i + 1).padStart(2, '0')}</span><i class="fas ${t.icon}"></i>${t.name}${tabChanged(t.id) ? '<span class="dot" title="Customised"></span>' : ''}</button>`).join('');
+        $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => goTab(b.dataset.tab));
+    }
+    function goTab(id) {
+        if (state.tab === id) return;
+        state.tab = id; renderTabs(); renderPanel();
+        const body = $('panelBody'); body.scrollTop = 0;
+        body.classList.remove('swap'); void body.offsetWidth; body.classList.add('swap');
+        clearTimeout(body._swap); body._swap = setTimeout(() => body.classList.remove('swap'), 900);
+    }
+    function stepTab(dir) { const tabs = visibleTabs(), t = tabs[tabs.findIndex(x => x.id === state.tab) + dir]; if (t) goTab(t.id); }
+    function stepNav() {
+        const tabs = visibleTabs(), i = tabs.findIndex(t => t.id === state.tab), prev = tabs[i - 1], next = tabs[i + 1];
+        return `<div class="steps">${prev ? `<button class="step-btn" type="button" data-step="${prev.id}"><i class="fas fa-arrow-left"></i><span><small>Back</small>${prev.name}</span></button>` : ''}` +
+            `${next ? `<button class="step-btn next" type="button" data-step="${next.id}"><span><small>Next</small>${next.name}</span><i class="fas fa-arrow-right"></i></button>` : ''}</div>`;
     }
 
     function renderPanel() {
         const body = $('panelBody');
         const type = state.model.type;
+        if (hover) previewOff();
         if (state.tab === 'model') {
             body.innerHTML = `<div class="group"><div class="group-title"><h4>Select Model</h4><span>${carModels.length} available</span></div>
               <div class="cards wide">${carModels.map(m => `<div class="card ${m.id === state.model.id ? 'on' : ''}" data-model="${m.id}">
                 <i class="fas ${m.icon}"></i><div class="txt"><span class="nm">${m.name}</span><span class="ds">${m.eyebrow} · ${m.tagline}</span></div>
-                <span class="pr">${fmt(m.price)}</span></div>`).join('')}</div></div>`;
-            body.querySelectorAll('[data-model]').forEach(el => el.onclick = () => setModel(carModels.find(m => m.id === el.dataset.model)));
+                <span class="pr">${fmt(m.price)}</span></div>`).join('')}</div></div>
+              <div class="group"><div class="group-title"><h4>Signature Looks</h4><span>One click, whole car</span></div>
+              <div class="looks">${LOOKS.map(l => `<button class="look" type="button" data-look="${l.id}"><span class="art" style="background:${l.art}"></span><span class="nm">${l.name}</span><span class="ds">${l.desc}</span></button>`).join('')}</div>
+              <button class="wide-btn" type="button" data-act="surprise"><i class="fas fa-dice"></i> Surprise me</button></div>` + stepNav();
+            body.querySelectorAll('[data-model]').forEach(el => el.onclick = () => {
+                if (el.dataset.model === state.model.id) return;
+                remember(); setModel(carModels.find(m => m.id === el.dataset.model));
+            });
+            bindCommon(body);
             return;
         }
         if (state.tab === 'summary') {
-            body.innerHTML = `<div class="group"><div class="group-title"><h4>Specification</h4><span>${state.model.name}</span></div>${summaryHTML()}</div>`;
+            body.innerHTML = summaryPanel() + stepNav();
+            bindCommon(body); bindGarage(body);
             return;
         }
         let html = '';
@@ -3334,23 +3536,21 @@
             const curName = g.id === 'engine' ? cur.names[type] : cur.name;
             html += `<div class="group"><div class="group-title"><h4>${g.title}</h4><span>${priceLabel(cur.price)}</span></div>`;
             if (g.style === 'paint') {
-                html += `<div class="group-sub">${cur.custom ? 'Individual · ' + FINISHES[state.custom.finish].label : curName}<em>${cur.custom ? '' : FINISHES[cur.finish].label}</em></div>`;
+                html += `<div class="group-sub" data-sub="${g.id}">${cur.custom ? 'Individual · ' + FINISHES[state.custom.finish].label : curName}<em>${cur.custom ? state.custom.hex.toUpperCase() : FINISHES[cur.finish].label}</em></div>`;
                 for (const fin of ['solid', 'metallic', 'matte', 'chrome', 'iridescent']) {
                     const list = cs.filter(c => c.finish === fin && !c.custom);
                     if (!list.length) continue;
                     html += `<div class="finish-label">${FINISHES[fin].label}</div><div class="swatches">` +
-                        list.map(c => `<div class="swatch ${c.id === cur.id ? 'on' : ''}" title="${c.name}" data-g="${g.id}" data-c="${c.id}" style="background:${swatchBg(c.hex, c.finish)}"></div>`).join('') + '</div>';
+                        list.map(c => `<div class="swatch ${c.id === cur.id ? 'on' : ''}" title="${c.name} · ${priceLabel(c.price)}" data-g="${g.id}" data-c="${c.id}" style="background:${swatchBg(c.hex, c.finish)}"></div>`).join('') + '</div>';
                 }
                 const cc = cs.find(c => c.custom);
                 html += `<div class="finish-label">Individual</div><div class="custom-color">
-                    <div class="swatch ${cur.custom ? 'on' : ''}" data-g="${g.id}" data-c="${cc.id}" style="background:${swatchBg(state.custom.hex, state.custom.finish)}"><span class="mk"><i class="fas fa-plus"></i></span></div>
-                    <label>Any colour you can imagine<br><small style="color:#777">${priceLabel(cc.price)}</small></label>
-                    <input type="color" id="customHex" value="${state.custom.hex}">
-                    <select id="customFinish" style="background:#111;color:#ddd;border:1px solid #333;padding:6px;border-radius:4px">
-                      ${['solid', 'metallic', 'matte'].map(f => `<option value="${f}" ${state.custom.finish === f ? 'selected' : ''}>${FINISHES[f].label}</option>`).join('')}
-                    </select></div>`;
+                    <div class="swatch ${cur.custom ? 'on' : ''}" title="Individual colour" data-g="${g.id}" data-c="${cc.id}" style="background:${swatchBg(state.custom.hex, state.custom.finish)}"><span class="mk"><i class="fas fa-plus"></i></span></div>
+                    <div class="cc-main"><label for="customHexText">Any colour you can imagine<small>${priceLabel(cc.price)}</small></label>
+                      <div class="cc-row"><input type="color" id="customHex" value="${state.custom.hex}" aria-label="Pick a colour"><input class="hex" id="customHexText" value="${state.custom.hex.toUpperCase()}" maxlength="7" spellcheck="false" autocomplete="off"></div></div>
+                    <div class="finish-seg">${['solid', 'metallic', 'matte'].map(f => `<button type="button" class="${state.custom.finish === f ? 'on' : ''}" data-finish="${f}">${FINISHES[f].label}</button>`).join('')}</div></div>`;
             } else if (g.style === 'swatch') {
-                html += `<div class="group-sub">${curName}</div><div class="swatches">` +
+                html += `<div class="group-sub" data-sub="${g.id}">${curName}</div><div class="swatches">` +
                     cs.map(c => `<div class="swatch ${c.id === cur.id ? 'on' : ''}" title="${c.name} · ${priceLabel(c.price)}" data-g="${g.id}" data-c="${c.id}" style="background:${c.hex.startsWith('linear') ? c.hex : swatchBg(c.hex, 'metallic')}"></div>`).join('') + '</div>';
             } else if (g.style === 'chips') {
                 html += `<div class="chips">` + cs.map(c => `<div class="chip ${c.id === cur.id ? 'on' : ''}" data-g="${g.id}" data-c="${c.id}">${c.name}<small>${c.price ? '+' + fmt(c.price) : ''}</small></div>`).join('') + '</div>';
@@ -3368,13 +3568,69 @@
             html += `<div class="group"><div class="group-title"><h4>Light Preview</h4><span>Not priced</span></div><div class="chips">` +
                 [['off', 'Off'], ['drl', 'Daytime'], ['on', 'Full Beam']].map(([id, n]) => `<div class="chip ${state.lights === id ? 'on' : ''}" data-light="${id}">${n}</div>`).join('') + '</div></div>';
         }
-        body.innerHTML = html;
+        if (state.tab === 'power') html += labEngine.html();
+        body.innerHTML = html + stepNav();
         body.querySelectorAll('[data-g]').forEach(el => el.onclick = () => select(el.dataset.g, el.dataset.c));
+        // hovering a colour tries it on the car; leaving puts the chosen one back
+        if (canHover) body.querySelectorAll('.swatch[data-g]').forEach(el => {
+            if (el.dataset.c === 'custom') return;
+            el.onpointerenter = () => previewOn(el.dataset.g, el.dataset.c);
+            el.onpointerleave = previewOff;
+        });
         body.querySelectorAll('[data-light]').forEach(el => el.onclick = () => { state.lights = el.dataset.light; applyLights(); renderPanel(); renderToolbar(); });
-        const ch = $('customHex'), cf = $('customFinish');
-        if (ch) ch.oninput = () => { state.custom.hex = ch.value; state.sel.paint = 'custom'; applyAll(); updateStats(); const sw = body.querySelector('[data-c="custom"]'); if (sw) sw.style.background = swatchBg(ch.value, state.custom.finish); };
-        if (ch) ch.onchange = () => renderPanel();
-        if (cf) cf.onchange = () => { state.custom.finish = cf.value; select('paint', 'custom'); };
+        bindCustom(body);
+        bindCommon(body);
+        if (state.tab === 'power') labEngine.bind();
+    }
+    function bindCommon(body) {
+        body.querySelectorAll('[data-step]').forEach(el => el.onclick = () => goTab(el.dataset.step));
+        body.querySelectorAll('[data-look]').forEach(el => el.onclick = () => applyLook(LOOKS.find(l => l.id === el.dataset.look)));
+        body.querySelectorAll('[data-act]').forEach(el => el.onclick = () => ACTIONS[el.dataset.act]());
+    }
+    function bindCustom(body) {
+        const ch = $('customHex'), ct = $('customHexText');
+        if (!ch) return;
+        let editing = false;
+        const live = hex => {
+            if (!editing) { remember(); editing = true; }
+            state.custom.hex = hex; state.sel.paint = 'custom';
+            applyAll(); updateStats();
+            const sw = body.querySelector('[data-c="custom"]'); if (sw) sw.style.background = swatchBg(hex, state.custom.finish);
+        };
+        const done = () => { if (editing) { editing = false; renderTabs(); renderPanel(); } };
+        ch.oninput = () => { ct.value = ch.value.toUpperCase(); ct.classList.remove('bad'); live(ch.value); };
+        ch.onchange = done;
+        ct.oninput = () => {
+            let v = ct.value.trim(); if (v[0] !== '#') v = '#' + v;
+            const ok = /^#[0-9a-f]{6}$/i.test(v);
+            ct.classList.toggle('bad', !ok && v.length >= 7);
+            if (ok) { ch.value = v.toLowerCase(); live(v.toLowerCase()); }
+        };
+        ct.onchange = done;
+        body.querySelectorAll('[data-finish]').forEach(b => b.onclick = () => {
+            if (state.custom.finish === b.dataset.finish && state.sel.paint === 'custom') return;
+            remember(); state.custom.finish = b.dataset.finish; select('paint', 'custom', false);
+        });
+    }
+
+    // ---------- hover preview ----------
+    let hover = null;
+    const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    function previewOn(g, c) {
+        if (hover && hover.g !== g) previewOff();
+        const sub = $('panelBody').querySelector(`[data-sub="${g}"]`);
+        if (!hover) hover = { g, prev: state.sel[g], html: sub ? sub.innerHTML : '' };
+        state.sel[g] = c; applyAll();
+        const ch = OPTIONS.find(o => o.id === g).choices.find(x => x.id === c);
+        if (sub) { sub.classList.add('preview'); sub.innerHTML = `${ch.name}<em>${priceLabel(ch.price)}</em>`; }
+    }
+    function previewOff() {
+        if (!hover) return;
+        const { g, prev, html } = hover;
+        hover = null;
+        state.sel[g] = prev; applyAll();
+        const sub = $('panelBody').querySelector(`[data-sub="${g}"]`);
+        if (sub) { sub.classList.remove('preview'); sub.innerHTML = html; }
     }
 
     function swatchBg(hex, finish) {
@@ -3384,12 +3640,15 @@
         return `radial-gradient(circle at 35% 30%, rgba(255,255,255,.55) 0%, ${hex} 38%, rgba(0,0,0,.65) 100%), ${hex}`;
     }
 
-    function select(groupId, choiceId) {
+    function select(groupId, choiceId, record = true) {
+        if (hover) { state.sel[hover.g] = hover.prev; hover = null; }
+        if (record && state.sel[groupId] !== choiceId) remember();
         const prevWheel = wheelKey();
         state.sel[groupId] = choiceId;
         if (wheelKey() !== prevWheel) rebuildWheels(vehicle);
         applyAll();
-        renderPanel(); updateStats();
+        renderTabs(); renderPanel(); updateStats();
+        labEngine.sync();
         ping($('panelBody').querySelector(`[data-g="${groupId}"][data-c="${choiceId}"]`));
         if (fx.scanT < 0) startScan(false);
         const g = OPTIONS.find(o => o.id === groupId), c = g.choices.find(x => x.id === choiceId);
@@ -3398,12 +3657,13 @@
     function wheelKey() { return state.sel.wheel + '|' + state.sel.wsize; }
 
     function setModel(m) {
+        labEngine.stop();
         state.model = m;
         ensureDefaults();
         windowsTarget = 0;
-        if (!SHOWROOM) history.replaceState(null, '', '?model=' + m.id);
         loadVehicle(m);
         renderTabs(); renderPanel(); renderToolbar(); updateStats();
+        labEngine.sync();
         ping($('panelBody').querySelector(`[data-model="${m.id}"]`));
     }
 
@@ -3411,13 +3671,14 @@
         const V = vehicle; if (!V) return;
         const c = V.caps || {};
         const tools = [];
-        if (c.doors) tools.push({ id: 'doors', icon: 'fa-door-open', tip: c.labels?.doors || 'Open Doors', on: groupOpen('doors') });
+        if (c.doors) tools.push({ id: 'doors', icon: 'fa-door-open', tip: (c.labels?.doors || 'Open Doors') + ' (D)', on: groupOpen('doors') });
         if (c.hood) tools.push({ id: 'hood', icon: 'fa-car-on', tip: c.labels?.hood || 'Hood', on: groupOpen('hood') });
         if (c.trunk) tools.push({ id: 'trunk', icon: 'fa-box-open', tip: c.labels?.trunk || 'Trunk', on: groupOpen('trunk') });
         if (c.windows) tools.push({ id: 'windows', icon: 'fa-window-maximize', tip: 'Lower Windows', on: windowsTarget > 0.5 });
-        tools.push({ id: 'lights', icon: 'fa-lightbulb', tip: 'Lights: ' + { off: 'Off', drl: 'Daytime', on: 'Full Beam' }[state.lights], on: state.lights !== 'off' });
+        tools.push({ id: 'lights', icon: 'fa-lightbulb', tip: 'Lights: ' + { off: 'Off', drl: 'Daytime', on: 'Full Beam' }[state.lights] + ' (L)', on: state.lights !== 'off' });
+        if (labEngine.available) tools.push({ id: 'engine', icon: 'fa-key', tip: (labEngine.running() ? 'Engine Off' : 'Start Engine') + ' (E)', on: labEngine.running() });
         tools.push({ id: 'drive', icon: 'fa-circle-play', tip: c.labels?.drive || 'Spin Wheels', on: state.drive });
-        tools.push({ id: 'rotate', icon: 'fa-rotate', tip: 'Auto Rotate', on: state.rotate });
+        tools.push({ id: 'rotate', icon: 'fa-rotate', tip: 'Auto Rotate (R)', on: state.rotate });
         tools.push({ id: 'env', icon: 'fa-sun', tip: 'Scene: ' + ENVS[state.env].name, on: false });
         $('toolbar').innerHTML = tools.map(t => `<div class="tool ${t.on ? 'on' : ''}" data-tool="${t.id}"><i class="fas ${t.icon}"></i><span class="tip">${t.tip}</span></div>`).join('');
         $('toolbar').querySelectorAll('.tool').forEach(el => el.onclick = () => toolAction(el.dataset.tool));
@@ -3428,6 +3689,7 @@
         else if (id === 'windows') windowsTarget = windowsTarget > 0.5 ? 0 : 1;
         else if (id === 'lights') { state.lights = { off: 'drl', drl: 'on', on: 'off' }[state.lights]; applyLights(); if (state.tab === 'lights') renderPanel(); }
         else if (id === 'drive') state.drive = !state.drive;
+        else if (id === 'engine') { labEngine.toggle(); return; }
         else if (id === 'rotate') state.rotate = !state.rotate;
         else if (id === 'env') { state.env = (state.env + 1) % ENVS.length; applyEnv(); toast('Scene: ' + ENVS[state.env].name); }
         renderToolbar();
@@ -3464,6 +3726,10 @@
         const total = totalPrice();
         if (rollTo($('totalPrice'), total, fmt)) { const tp = $('totalPrice'); tp.classList.remove('bump'); void tp.offsetWidth; tp.classList.add('bump'); }
         $('monthly').innerHTML = `from <b>${fmt(total / 60 * 1.049)}</b>/mo<br><small>60 months · 4.9% APR</small>`;
+        $('priceSplit').innerText = `Base ${fmt(m.price)} · Options ${total > m.price ? '+' + fmt(total - m.price) : 'none'}`;
+        if (lastPrice && lastPrice.model === m.id && lastPrice.total !== total) showDelta(total - lastPrice.total);
+        lastPrice = { model: m.id, total };
+        syncURL();
         if (fx.titleId !== m.id) {
             fx.titleId = m.id;
             decode($('modelNameDisplay'), m.name); decode($('stageEyebrow'), m.eyebrow); flashTitle();
@@ -3478,6 +3744,13 @@
         $('specZero').innerText = m.zero ? (m.zero * (1 - (boost + mods.acc) / 100 * 0.9)).toFixed(1) + 's' : '—';
         rollTo($('specTop'), Math.round(m.vmax * (1 + (boost + mods.spd) / 200)), Math.round);
         if (state.tab === 'summary') renderPanel();
+    }
+    let lastPrice = null;
+    function showDelta(d) {
+        const el = $('priceDelta');
+        el.textContent = (d > 0 ? '+' : '−') + fmt(Math.abs(d));
+        el.className = 'delta' + (d < 0 ? ' down' : '');
+        void el.offsetWidth; el.classList.add('show');
     }
     function updateBar(barId, txtId, val) {
         $(barId).style.width = val + '%';
@@ -3593,6 +3866,356 @@
     }
 
     // ==========================================
+    // 14b. LAB TOOLS: undo, signature looks, garage, sharing, sound check, keyboard
+    // ==========================================
+    const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const STANDARD_CUSTOM = { hex: '#00d9c8', finish: 'metallic' };
+
+    // ---------- undo / redo ----------
+    const undoStack = { past: [], future: [] };
+    const snapshot = () => ({ model: state.model.id, sel: { ...state.sel }, custom: { ...state.custom } });
+    function remember() {
+        undoStack.past.push(snapshot());
+        if (undoStack.past.length > 80) undoStack.past.shift();
+        undoStack.future.length = 0;
+        paintHistory();
+    }
+    function paintHistory() {
+        $('undoBtn').disabled = !undoStack.past.length;
+        $('redoBtn').disabled = !undoStack.future.length;
+    }
+    // redraw everything that depends on the selection; prevWheel is wheelKey() from before the change
+    function refresh(prevWheel) {
+        if (wheelKey() !== prevWheel) rebuildWheels(vehicle);
+        applyAll(); renderTabs(); renderPanel(); updateStats(); labEngine.sync();
+        if (fx.scanT < 0) startScan(false);
+    }
+    function restoreBuild(b) {
+        const m = carModels.find(x => x.id === b.model) || state.model, prevWheel = wheelKey();
+        state.sel = { ...b.sel }; state.custom = { ...STANDARD_CUSTOM, ...b.custom };
+        if (m.id !== state.model.id) setModel(m);
+        else { ensureDefaults(); refresh(prevWheel); }
+    }
+    function undo() { if (!undoStack.past.length) return; undoStack.future.push(snapshot()); restoreBuild(undoStack.past.pop()); paintHistory(); toast('Undo'); }
+    function redo() { if (!undoStack.future.length) return; undoStack.past.push(snapshot()); restoreBuild(undoStack.future.pop()); paintHistory(); toast('Redo'); }
+    function resetBuild() {
+        remember();
+        const prevWheel = wheelKey();
+        state.sel = {}; state.custom = { ...STANDARD_CUSTOM }; ensureDefaults();
+        refresh(prevWheel);
+        toast('Back to standard spec');
+    }
+
+    // ---------- signature looks ----------
+    // Options that don't exist on the current vehicle are skipped; a list means "first one this vehicle has"
+    const LOOKS = [
+        { id: 'stealth', name: 'Stealth', desc: 'Matte graphite, blacked out', art: 'linear-gradient(135deg,#4a4d52,#111214 65%)',
+          sel: { paint: 'mgrey', roof: 'black', accent: 'graphite', livery: 'none', wheel: ['star', 'bikeTri', 'truckSteel'], wsize: 's1', wfinish: 'black', caliper: 'black', trim: 'shadow', grille: 'black', aero: 'lip', mirrors: 'black', underglow: 'none', frame: 'black', fork: 'black', stacks: 'black', lightbar: 'off', headlights: 'laser', tint: 't3', upholstery: 'black', inlay: 'carbon', ambient: 'blue', exhaust: 'black' } },
+        { id: 'track', name: 'Track Day', desc: 'Yellow, wing, ceramics', art: 'linear-gradient(110deg,#f0bd00 44%,#111 44% 50%,#f0bd00 50% 56%,#111 56% 62%,#f0bd00 62%)',
+          sel: { paint: 'yellow', roof: 'carbon', accent: 'orange', livery: 'twinB', wheel: ['mesh', 'bikeCarbon', 'truckAero'], wsize: 's2', wfinish: 'black', caliper: 'red', disc: 'ceramic', trim: 'shadow', grille: 'black', aero: 'wing', mirrors: 'carbon', underglow: 'none', frame: 'red', fork: 'gold', headlights: 'laser', tint: 't2', upholstery: 'red', inlay: 'carbon', ambient: 'white', exhaust: 'sport' } },
+        { id: 'neon', name: 'Neon Night', desc: 'Purple glow, dark matter', art: 'radial-gradient(circle at 30% 75%,#bc13fe,#2a0845 60%,#050208)',
+          sel: { paint: 'purple', roof: 'black', accent: 'purple', livery: 'none', wheel: ['turbine', 'bikeTri', 'truckPolish'], wfinish: 'gunmetal', caliper: 'purple', trim: 'shadow', grille: 'glow', underglow: 'purple', frame: 'purple', fork: 'black', stacks: 'black', lightbar: 'on', headlights: 'laser', tint: 't2', upholstery: 'purple', ambient: 'purple', engine: 'antimatter', exhaust: 'black' } },
+        { id: 'heritage', name: 'Heritage', desc: 'Isle green, walnut, cognac', art: 'linear-gradient(135deg,#1d6b51,#0c2a20 62%,#8a4520)',
+          sel: { paint: 'green', roof: 'body', accent: 'white', livery: 'none', wheel: ['multi', 'bikeY', 'truckPolish'], wsize: 's0', wfinish: 'silver', caliper: 'gold', trim: 'chrome', grille: 'chrome', aero: 'none', mirrors: 'body', underglow: 'none', frame: 'alu', fork: 'gold', stacks: 'chrome', headlights: 'led', tint: 't0', upholstery: 'cognac', inlay: 'wood', ambient: 'amber', exhaust: 'std', engine: 'v8' } },
+        { id: 'arctic', name: 'Arctic Ion', desc: 'Matte pearl, electric', art: 'linear-gradient(135deg,#f4f5f6,#d3d3cd 55%,#00e5ff)',
+          sel: { paint: 'mwhite', roof: 'glass', accent: 'cyan', livery: 'none', wheel: ['aero', 'bikeTri', 'truckAero'], wsize: 's1', wfinish: 'bicolor', caliper: 'blue', trim: 'shadow', grille: 'black', underglow: 'cyan', frame: 'alu', fork: 'silver', stacks: 'none', headlights: 'laser', tint: 't1', upholstery: 'ivory', inlay: 'alu', ambient: 'blue', engine: 'electric' } },
+        { id: 'midas', name: 'Midas', desc: 'Pure gold, bronze, ivory', art: 'radial-gradient(circle at 35% 30%,#fff,#d6a62a 35%,#3a2a08)',
+          sel: { paint: 'gold', roof: 'black', accent: 'graphite', livery: 'none', wheel: ['double', 'bikeY', 'truckPolish'], wsize: 's2', wfinish: 'bronze', caliper: 'black', trim: 'shadow', grille: 'black', mirrors: 'black', underglow: 'none', frame: 'black', fork: 'gold', stacks: 'chrome', tint: 't2', upholstery: 'ivory', inlay: 'wood', ambient: 'amber', exhaust: 'sport' } }
+    ];
+    function applyLook(look) {
+        remember();
+        const prevWheel = wheelKey(), type = state.model.type;
+        state.sel = {}; ensureDefaults();
+        for (const [gid, want] of Object.entries(look.sel)) {
+            const g = OPTIONS.find(o => o.id === gid);
+            if (!g || !g.types.includes(type)) continue;
+            const cs = choicesFor(g), id = [].concat(want).find(w => cs.some(c => c.id === w && !c.custom));
+            if (id) state.sel[gid] = id;
+        }
+        refresh(prevWheel);
+        toast(`${look.name} · ${fmt(totalPrice())}`);
+    }
+    function surprise() {
+        remember();
+        const prevWheel = wheelKey(), type = state.model.type;
+        for (const g of OPTIONS) {
+            if (!g.types.includes(type)) continue;
+            const cs = choicesFor(g).filter(c => !c.custom);
+            // keep combustion more often than not, it's the one you can hear
+            state.sel[g.id] = g.id === 'engine' && Math.random() < 0.55 ? cs[0].id : cs[(Math.random() * cs.length) | 0].id;
+        }
+        refresh(prevWheel);
+        toast(`Surprise build · ${fmt(totalPrice())}`);
+    }
+
+    // ---------- sharing ----------
+    function paintName() { const p = choice('paint'); return p.custom ? 'Individual ' + state.custom.hex.toUpperCase() : p.name; }
+    function defaultName() { return `${state.model.name.split(' ').pop()} · ${paintName()}`; }
+    // only options that differ from standard go in the link, so links stay short
+    function shareQuery() {
+        const q = new URLSearchParams({ model: state.model.id });
+        for (const g of OPTIONS) if (g.types.includes(state.model.type) && state.sel[g.id] && state.sel[g.id] !== defaultId(g)) q.set(g.id, state.sel[g.id]);
+        if (state.sel.paint === 'custom') { q.set('hex', state.custom.hex.slice(1)); q.set('finish', state.custom.finish); }
+        return '?' + q;
+    }
+    const shareURL = () => location.href.split(/[?#]/)[0] + shareQuery();
+    let urlTimer;
+    function syncURL() {
+        if (SHOWROOM) return;
+        clearTimeout(urlTimer);
+        urlTimer = setTimeout(() => history.replaceState(null, '', shareQuery()), 250);
+    }
+    async function copyLink() {
+        const url = shareURL();
+        try { await navigator.clipboard.writeText(url); toast('Share link copied'); }
+        catch (e) { window.prompt('Copy this link to share your build', url); }
+    }
+    // Grab the current frame (must run in the same task as the render, before the canvas is presented)
+    function capture(w, h) {
+        composer.render();
+        const src = renderer.domElement, c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const k = Math.min(src.width / w, src.height / h), sw = w * k, sh = h * k;
+        c.getContext('2d').drawImage(src, (src.width - sw) / 2, (src.height - sh) / 2, sw, sh, 0, 0, w, h);
+        return c;
+    }
+    function downloadImage() {
+        const src = renderer.domElement, c = capture(src.width, src.height), ctx = c.getContext('2d'), w = c.width, h = c.height, s = h / 900, pad = 40 * s;
+        const g = ctx.createLinearGradient(0, h * 0.7, 0, h);
+        g.addColorStop(0, 'rgba(5,5,6,0)'); g.addColorStop(1, 'rgba(5,5,6,.8)');
+        ctx.fillStyle = g; ctx.fillRect(0, h * 0.7, w, h * 0.3);
+        ctx.fillStyle = '#bc13fe'; ctx.font = `800 ${20 * s}px Orbitron, sans-serif`; ctx.fillText('VELONIX', pad, h - pad - 54 * s);
+        ctx.fillStyle = '#ffffff'; ctx.font = `800 ${40 * s}px Orbitron, sans-serif`; ctx.fillText(state.model.name, pad, h - pad);
+        ctx.textAlign = 'right';
+        ctx.font = `700 ${34 * s}px Orbitron, sans-serif`; ctx.fillText(fmt(totalPrice()), w - pad, h - pad);
+        ctx.fillStyle = '#d2d2dc'; ctx.font = `600 ${21 * s}px Rajdhani, sans-serif`;
+        ctx.fillText(`${paintName()} · ${choice('engine').names[state.model.type]}`, w - pad, h - pad - 54 * s);
+        c.toBlob(blob => {
+            if (!blob) { toast('Could not save the image'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = `velonix-${state.model.id}.png`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+            toast('Image saved');
+        }, 'image/png');
+    }
+
+    // ---------- my garage (localStorage) ----------
+    const GARAGE_KEY = 'velonix-garage', GARAGE_MAX = 12;
+    const garage = {
+        list() { try { const l = JSON.parse(localStorage.getItem(GARAGE_KEY)); return Array.isArray(l) ? l : []; } catch (e) { return []; } },
+        save(l) { try { localStorage.setItem(GARAGE_KEY, JSON.stringify(l)); return true; } catch (e) { return false; } }
+    };
+    function saveBuild(name, status, quiet) {
+        let thumb = '';
+        try { thumb = capture(320, 180).toDataURL('image/jpeg', 0.72); } catch (e) {}
+        const b = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: (name || defaultName()).slice(0, 40), ...snapshot(), price: totalPrice(), date: Date.now(), status: status || '', thumb };
+        const list = [b, ...garage.list()].slice(0, GARAGE_MAX);
+        if (!garage.save(list)) { b.thumb = ''; if (!garage.save(list)) { toast('Could not save: browser storage is full'); return false; } }
+        if (!quiet) toast(`Saved to My Garage: ${b.name}`);
+        if (state.tab === 'summary') renderPanel();
+        return true;
+    }
+    function loadBuild(id) {
+        const b = garage.list().find(x => x.id === id); if (!b) return;
+        remember(); restoreBuild(b);
+        toast(`Loaded ${b.name}`);
+    }
+    function buildCard(b) {
+        const m = carModels.find(x => x.id === b.model);
+        const img = typeof b.thumb === 'string' && b.thumb.startsWith('data:image/') ? `<img src="${b.thumb}" alt="">` : '<span class="noimg"><i class="fas fa-car-side"></i></span>';
+        return `<div class="build">${img}
+          <div><div class="nm" title="${esc(b.name)}">${esc(b.name)}</div><div class="meta">${esc(m ? m.name : b.model)} · ${fmt(+b.price || 0)}</div>
+          <div class="meta">${b.status ? `<span class="tag">${esc(b.status)}</span> · ` : ''}${new Date(+b.date || 0).toLocaleDateString()}</div></div>
+          <div class="acts"><button class="icon-btn" type="button" data-load="${esc(b.id)}" title="Load this build"><i class="fas fa-arrow-rotate-left"></i></button>
+          <button class="icon-btn danger" type="button" data-del="${esc(b.id)}" title="Delete"><i class="fas fa-trash-can"></i></button></div></div>`;
+    }
+    function summaryPanel() {
+        const list = garage.list();
+        return `<div class="group"><div class="group-title"><h4>Specification</h4><span>${state.model.name}</span></div>${summaryHTML()}</div>
+          <div class="group"><div class="group-title"><h4>Share</h4><span>Send it to a friend</span></div>
+            <div class="share-row">
+              <button class="act-btn" type="button" data-act="link"><i class="fas fa-link"></i>Copy link</button>
+              <button class="act-btn" type="button" data-act="image"><i class="fas fa-camera"></i>Save image</button>
+              <button class="act-btn" type="button" data-act="surprise"><i class="fas fa-dice"></i>Surprise me</button>
+            </div></div>
+          <div class="group"><div class="group-title"><h4>My Garage</h4><span>${list.length ? `${list.length} of ${GARAGE_MAX} saved` : 'Saved on this device'}</span></div>
+            <div class="save-row"><input id="buildName" maxlength="40" placeholder="${esc(defaultName())}" aria-label="Build name"><button class="act-btn" type="button" data-act="save"><i class="fas fa-floppy-disk"></i>Save</button></div>
+            <div class="garage">${list.length ? list.map(buildCard).join('') : '<p class="empty">No saved builds yet. Save this one and it will be waiting here next time.</p>'}</div></div>`;
+    }
+    function bindGarage(body) {
+        body.querySelectorAll('[data-load]').forEach(el => el.onclick = () => loadBuild(el.dataset.load));
+        // delete asks twice: the first click arms the button
+        body.querySelectorAll('[data-del]').forEach(el => el.onclick = () => {
+            if (!el.classList.contains('armed')) {
+                el.classList.add('armed'); el.style.borderColor = '#ff3b5c'; el.style.color = '#ff3b5c'; el.title = 'Click again to delete';
+                setTimeout(() => { el.classList.remove('armed'); el.style.borderColor = el.style.color = ''; el.title = 'Delete'; }, 2500);
+                return;
+            }
+            garage.save(garage.list().filter(x => x.id !== el.dataset.del));
+            renderPanel(); toast('Build deleted');
+        });
+        const inp = $('buildName');
+        if (inp) inp.onkeydown = e => { if (e.key === 'Enter') ACTIONS.save(); };
+    }
+    const ACTIONS = {
+        surprise, link: copyLink, image: downloadImage,
+        save: () => { const inp = $('buildName'); saveBuild(inp ? inp.value.trim() : ''); }
+    };
+
+    // ---------- sound check: start the engine and rev it (engine-audio.js); the sound follows the power core and exhaust ----------
+    const labEngine = (() => {
+        const A = window.VelonixAudio;
+        if (!A || SHOWROOM) return { available: false, html: () => '', bind() {}, sync() {}, tick() {}, toggle() {}, press() {}, release() {}, stop() {}, running: () => false, vibe: () => null };
+        const sim = new A.Sim(A.ENGINES.spectre);
+        let ctx = null, master = null, engine = null, spec = null, held = false, prevLights = null, shown = -1, roll = 0;
+        let volume = 70;
+        try { const v = JSON.parse(localStorage.getItem('velonix-volume')); if (typeof v === 'number') volume = v; } catch (e) {}
+        const specFor = () => A.CORES[state.sel.engine] || A.ENGINES[state.model.id] || A.ENGINES.spectre;
+        const tone = () => ({ sport: { loud: 1.2, rasp: 0.6 }, black: { loud: 1.05, deep: 1 } })[state.sel.exhaust] || {};
+        const chimes = () => spec.crank === 0;   // the electric cores power up with a chime instead of a starter
+
+        function init() {
+            if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+            const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+            ctx = new AC();
+            master = ctx.createGain(); master.gain.value = 0; setVolume();
+            const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.2;
+            const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.08;
+            master.connect(comp); comp.connect(lim); lim.connect(ctx.destination);
+            A.create(ctx).then(e => {
+                if (!e) { toast('Engine sound needs a newer browser'); return; }
+                engine = e; e.output.connect(master);
+                e.setProfile(spec.sound, spec, tone()); sim.attach(e);
+                if (sim.started && chimes()) e.chime(spec.sound === 'core');
+            });
+        }
+        function setVolume() { if (master) master.gain.setTargetAtTime(Math.pow(volume / 100, 1.6) * 2.2, ctx.currentTime, 0.05); }
+        function sync() {
+            const next = specFor();
+            if (next !== spec) {
+                spec = next; sim.configure(next);
+                if (engine) { engine.setProfile(next.sound, next, tone()); if (sim.started && chimes()) engine.chime(next.sound === 'core'); }
+                const name = $('scName'); if (name) name.innerText = next.label;
+            } else if (engine) engine.setTone(tone());
+            paint();
+        }
+        function start() {
+            init(); sync();
+            sim.start();
+            if (engine && chimes()) engine.chime(spec.sound === 'core');
+            prevLights = state.lights; state.lights = 'on'; applyLights();
+            renderToolbar(); paint();
+        }
+        function stop() {
+            if (!sim.started) return;
+            sim.stop(); held = false;
+            if (prevLights) { state.lights = prevLights; prevLights = null; applyLights(); }
+            renderToolbar(); paint();
+        }
+        function press() { init(); if (!sim.started) start(); held = true; sim.throttle(true); paint(); }
+        function release() { if (!held) return; held = false; sim.throttle(false); paint(); }
+        function toggle() { if (sim.started) stop(); else start(); }
+        const stateText = () => !sim.started ? 'Engine off' : sim.crankT > 0 ? 'Cranking' : sim.limitT > 0 ? 'Limiter' : held ? 'On throttle' : spec.idle === 0 ? 'Ready' : 'Idling';
+        function paint() {
+            const box = $('soundCheck'); if (!box || !spec) return;
+            box.classList.toggle('running', sim.started);
+            $('scRev').innerHTML = sim.started ? '<i class="fas fa-gauge-high"></i> <span>Hold to rev</span>' : '<i class="fas fa-power-off"></i> <span>Start engine</span>';
+            $('scRev').classList.toggle('held', held);
+            $('scStop').disabled = !sim.started;
+            box._st = stateText(); $('scState').innerText = box._st;
+        }
+        function tick(dt) {
+            if (!spec || (!sim.started && sim.rpm <= 0)) return;
+            sim.step(dt);
+            const box = $('soundCheck'); if (!box) return;
+            const r = Math.round(sim.rpm / 10) * 10;
+            if (r !== shown) { shown = r; $('scRpm').innerText = r.toLocaleString('en-US'); $('scBar').style.width = Math.min(100, sim.rpm / spec.max * 100).toFixed(1) + '%'; }
+            box.classList.toggle('limit', sim.limitT > 0);
+            box.style.setProperty('--throb', Math.min(1, sim.rpm / spec.limit).toFixed(2));
+            const st = stateText(); if (st !== box._st) { box._st = st; $('scState').innerText = st; }
+        }
+        // the body shivers at idle and rolls against the torque when you rev it
+        function vibe(dt, t) {
+            if (!spec || (!sim.started && sim.rpm < 5) || reduceMotion) { roll = 0; return null; }
+            const frac = Math.min(1, sim.rpm / spec.limit), amp = (0.0009 + frac * 0.0016) * (spec.idle ? 1 : 0.35);
+            roll += ((sim.load ? -0.007 * frac : 0) - roll) * Math.min(1, dt * 5);
+            return { y: Math.sin(t * (38 + frac * 60)) * amp + (Math.random() - 0.5) * amp * 0.5, roll: roll + Math.sin(t * 21) * amp * 0.9 };
+        }
+        function html() {
+            const s = specFor();
+            return `<div class="group"><div class="group-title"><h4>Sound Check</h4><span id="scName">${s.label}</span></div>
+              <div class="sound-check" id="soundCheck">
+                <div class="sc-top"><div><b class="sc-rpm" id="scRpm">${(Math.round(sim.rpm / 10) * 10).toLocaleString('en-US')}</b><small>rpm</small></div><span class="sc-state" id="scState">Engine off</span></div>
+                <div class="sc-bar"><i id="scBar" style="width:${Math.min(100, sim.rpm / s.max * 100).toFixed(1)}%"></i>${s.limiter === false ? '' : `<b style="left:${(s.limit / s.max * 100).toFixed(1)}%"></b>`}</div>
+                <div class="sc-btns">
+                  <button class="sc-rev" id="scRev" type="button"></button>
+                  <button class="icon-btn sc-stop" id="scStop" type="button" title="Engine off (E)" aria-label="Engine off"><i class="fas fa-power-off"></i></button>
+                </div>
+                <label class="sc-vol"><i class="fas fa-volume-high"></i><input type="range" min="0" max="100" value="${volume}" id="scVol" aria-label="Volume"><em id="scVolVal">${volume >= 100 ? 'MAX' : volume}</em></label>
+                <p class="sc-hint">Hold to rev, or hold <kbd>Space</kbd>. Swap the power core or exhaust above and hear the difference.</p>
+              </div></div>`;
+        }
+        function bind() {
+            const rev = $('scRev'); if (!rev) return;
+            if (!spec) { spec = specFor(); sim.configure(spec); }
+            shown = -1;
+            rev.onpointerdown = e => { if (e.button) return; e.preventDefault(); rev.setPointerCapture(e.pointerId); press(); };
+            ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => rev.addEventListener(t, release));
+            rev.oncontextmenu = e => e.preventDefault();
+            rev.onkeydown = e => { if (e.code === 'Enter' && !e.repeat) { e.preventDefault(); press(); } };
+            rev.onkeyup = e => { if (e.code === 'Enter') release(); };
+            $('scStop').onclick = stop;
+            const vol = $('scVol');
+            vol.oninput = () => {
+                volume = +vol.value;
+                try { localStorage.setItem('velonix-volume', JSON.stringify(volume)); } catch (e) {}
+                $('scVolVal').innerText = volume >= 100 ? 'MAX' : volume;
+                init(); setVolume();
+            };
+            paint();
+        }
+        // browsers keep audio locked until a gesture; a background tab stops the engine
+        document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); if (ctx) ctx.suspend(); } });
+        return { available: true, html, bind, sync, tick, toggle, press, release, stop, running: () => sim.started, vibe };
+    })();
+
+    // ---------- keyboard ----------
+    function toggleKeys(force) {
+        const pop = $('keysPop'), on = force ?? !pop.classList.contains('show');
+        pop.classList.toggle('show', on);
+        $('keysBtn').setAttribute('aria-expanded', String(on));
+    }
+    function initKeys() {
+        if (SHOWROOM) return;
+        addEventListener('keydown', e => {
+            if (e.target.closest('input, textarea, select')) return;
+            const mod = e.ctrlKey || e.metaKey;
+            if (mod && e.code === 'KeyZ') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+            if (mod && e.code === 'KeyY') { e.preventDefault(); redo(); return; }
+            if (mod || e.altKey) return;
+            if (e.code === 'Space') {
+                // a focused button keeps Space for itself until the engine is running
+                if (!labEngine.available || (!labEngine.running() && e.target.closest('button, a'))) return;
+                e.preventDefault(); if (!e.repeat) labEngine.press();
+                return;
+            }
+            if (e.repeat) return;
+            if (e.code === 'Escape') { toggleKeys(false); $('modal').classList.remove('show'); return; }
+            if (e.key === '?') { toggleKeys(); return; }
+            const n = parseInt(e.key, 10);
+            if (n >= 1 && n <= 6) { const vs = VIEWS.filter(v => v.id !== 'interior' || (vehicle && vehicle.interiorCam)); if (vs[n - 1]) setView(vs[n - 1].id); return; }
+            const caps = (vehicle && vehicle.caps) || {};
+            const act = { KeyR: 'rotate', KeyL: 'lights', KeyE: 'engine', KeyD: caps.doors ? 'doors' : null }[e.code];
+            if (act) { toolAction(act); return; }
+            if (e.code === 'ArrowRight') stepTab(1);
+            else if (e.code === 'ArrowLeft') stepTab(-1);
+        });
+        addEventListener('keyup', e => { if (e.code === 'Space') labEngine.release(); });
+        addEventListener('pointerdown', e => { if (!e.target.closest('#keysPop, #keysBtn')) toggleKeys(false); });
+    }
+
+    // ==========================================
     // 15. BOOT
     // ==========================================
     // Loader progress: bar, status line and a counted percentage; yields a frame so each stage paints
@@ -3628,6 +4251,13 @@
                 const g = OPTIONS.find(o => o.id === k);
                 if (g && g.types.includes(state.model.type) && choicesFor(g).some(c => c.id === v && !c.custom)) state.sel[k] = v;
             }
+            // shared links carry an individual colour as ?paint=custom&hex=rrggbb&finish=matte
+            const hex = params.get('hex'), fin = params.get('finish');
+            if (params.get('paint') === 'custom' && /^[0-9a-f]{6}$/i.test(hex || '')) {
+                state.custom.hex = '#' + hex.toLowerCase();
+                if (['solid', 'metallic', 'matte'].includes(fin)) state.custom.finish = fin;
+                state.sel.paint = 'custom';
+            }
             await step(74, 'Assembling ' + state.model.name);
             loadVehicle(state.model);
             renderTabs(); renderPanel(); renderToolbar(); updateStats();
@@ -3658,7 +4288,15 @@
         window.addEventListener('pageshow', e => { if (e.persisted) document.querySelector('.curtain').classList.remove('cover'); });
         $('buildBtn').onclick = finishBuild;
         $('modalClose').onclick = () => $('modal').classList.remove('show');
-        $('modalConfirm').onclick = () => { $('modal').classList.remove('show'); toast(`Fabrication initiated: ${state.model.name} · ${fmt(totalPrice())}`); };
+        $('modalConfirm').onclick = () => {
+            $('modal').classList.remove('show');
+            const saved = saveBuild(defaultName(), 'Ordered', true);
+            toast(`Fabrication initiated: ${state.model.name} · ${fmt(totalPrice())}${saved ? ' · saved to My Garage' : ''}`);
+        };
+        $('undoBtn').onclick = undo; $('redoBtn').onclick = redo; $('resetBtn').onclick = resetBuild;
+        paintHistory();
+        $('keysBtn').onclick = () => toggleKeys();
+        initKeys();
     }
     boot();
 

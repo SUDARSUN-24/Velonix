@@ -39,7 +39,12 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - 💰 Dynamic pricing system
 - 📊 Live performance stats (speed, acceleration, handling)
 - 🛰️ Live 3D home page: drag to rotate, switch models, scroll-driven camera
-- 🔊 Engine Room: hold to rev into the limiter, exhaust crackle on lift-off, volume up to MAX, horn, headlight flash and burnout, with a different engine note per vehicle (V8, V12, diesel, inline-4)
+- 🔊 Engine Room: a per-cylinder engine synth. The starter cranks, the engine catches, you rev it into the limiter and it crackles on lift-off. Each vehicle sounds different: cross-plane V8 burble with turbo flutter, screaming V12, supercharger whine, diesel clatter with a blow-off hiss, high-revving inline-4. Volume goes up to MAX, plus horn, headlight flash and burnout
+- 🎧 Sound check in the Lab: start your build and rev it; the power core (combustion, Ion Drive whine, Dark Matter drone) and the exhaust option change the sound
+- ✨ Signature looks (six one-click themes), Surprise me, undo/redo and reset
+- 🖌️ Hover a colour to try it on the car; any custom colour by picker or hex
+- 💾 My Garage: save builds on your device, share a link to the exact build, export a branded image
+- ⌨️ Keyboard shortcuts in the Lab (press `?`)
 - 🔗 The vehicle on screen opens straight in the configurator
 - 🎥 Interactive 3D rendering with orbit controls, interior views and materialize effects
 - 🌗 Dark and light themes shared across pages
@@ -54,7 +59,9 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 ![Velonix home page with a live 3D car](screenshots/home.jpg)
 
 ### Engine Room
-Hold to rev (or press Space) and bounce it off the limiter, lift off for the crackle, and turn the volume all the way to MAX. Horn (H), Flash (F) and Burnout (B) make the 3D car react: the headlights blink, the wheels spin and the camera shakes with the revs. The engine sound is synthesized live with Web Audio.
+Hold to rev (or press Space) and bounce it off the limiter, lift off for the crackle, and turn the volume all the way to MAX. Horn (H), Flash (F) and Burnout (B) make the 3D car react: the headlights blink, the wheels spin and the camera shakes with the revs.
+
+The engine sound is synthesized live in an AudioWorklet (`engine-audio.js`). Every cylinder firing is a pressure pulse sent down tuned exhaust pipes; a cross-plane V8 splits its pulses unevenly across two banks, which gives it the burble. On top of that are intake roar, turbo whistle and compressor flutter, supercharger whine, diesel clatter, the starter motor, fuel-cut on the limiter, overrun pops and a short garage reverb.
 
 | Revving | Volume at MAX + burnout |
 |---------|-------------------------|
@@ -67,7 +74,7 @@ Hold to rev (or press Space) and bounce it off the limiter, lift off for the cra
 | ![About section](screenshots/about.jpg) | ![The Lab section](screenshots/lab.jpg) |
 
 ### 3D Configurator Lab
-Paint, wheels, lighting, interior and engine options with live pricing and performance stats.
+Paint, wheels, lighting, interior and engine options with live pricing and performance stats. Step through the tabs with Back / Next, pick a signature look, hover colours to preview them, then start the engine in the Power tab to hear your build. The Summary tab saves builds to My Garage, copies a share link and exports an image.
 
 ![3D configurator](screenshots/configurator.jpg)
 
@@ -99,7 +106,8 @@ velonix-car-configurator/
 │── index.html        # Home: live 3D showroom, About, Engine Room, Lab intro
 │── customize.html    # 3D configurator lab (self-contained; ?showroom=1 = canvas-only mode used by Home)
 │── site.css          # Home page styles
-│── site.js           # Home page logic: drives the embedded 3D studio and the Engine Room sound
+│── site.js           # Home page logic: drives the embedded 3D studio and the Engine Room
+│── engine-audio.js   # Engine sound synth (AudioWorklet) and rev model, shared by Home and the Lab
 │── customcar1.png    # Poster shown if WebGL is unavailable
 └── screenshots/      # README screenshots
 ```
@@ -113,13 +121,12 @@ velonix-car-configurator/
 - Managing application state in JavaScript  
 - Building interactive UI components  
 - Driving an embedded 3D scene from page scroll  
-- Synthesizing engine sound with the Web Audio API  
+- Synthesizing engine sound with the Web Audio API and an AudioWorklet
 
 ---
 
 ## 🔧 Future Improvements
 
-- Save user configurations (localStorage)
 - Backend integration for real orders
 - User authentication system
 - Database for storing builds
@@ -131,7 +138,6 @@ velonix-car-configurator/
 
 Sudasun
 - GitHub: https://github.com/SUDARSUN-24
-- Portfolio: (add later)
 
 ---
 

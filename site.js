@@ -198,17 +198,12 @@
     const box = $('[data-engine]');
     const q = k => $(`[data-en-${k}]`, box);
     const btn = q('rev'), needle = q('needle'), limitLight = q('limit'), pops = q('pops'), vol = q('vol');
-    // cyl sets the firing note (rpm / 60 * cyl / 2); up is how fast it spins up under throttle
-    const ENGINES = {
-      spectre:  { label: 'Twin-turbo V8',   cyl: 8,  idle: 850,  limit: 7800,  max: 9000,  step: 1000, up: 2.6 },
-      vortex:   { label: 'V12',             cyl: 12, idle: 1000, limit: 9200,  max: 10000, step: 1000, up: 3.4 },
-      behemoth: { label: 'Supercharged V8', cyl: 8,  idle: 750,  limit: 6800,  max: 8000,  step: 1000, up: 2.0 },
-      hauler:   { label: 'Inline-6 diesel', cyl: 6,  idle: 600,  limit: 2300,  max: 3000,  step: 500,  up: 1.5 },
-      titan:    { label: 'Inline-4',        cyl: 4,  idle: 1300, limit: 13000, max: 14000, step: 2000, up: 4.6 }
-    };
+    const ENGINES = VelonixAudio.ENGINES;  // shared with the Lab (engine-audio.js)
     const SEGMENTS = 18;
     let eng = ENGINES[modelId];
-    let rpm = 0, peak = 0, throttle = false, started = false, burn = 0, crackle = 0, limitT = 0, level = 0, db = 0;
+    const sim = new VelonixAudio.Sim(eng);
+    sim.onPop = strength => { if (!reduce || Math.random() < 0.3) popText(strength > 0.7); };
+    let peak = 0, burn = 0, level = 0, db = 0;
     let volume = store.get('velonix-volume', 70);
 
     meter();
@@ -231,9 +226,8 @@
       q('ticks').innerHTML = h;
     }
 
-    /* sound: firing note + sub octave + upper partial through a soft clipper and resonant low-pass,
-       then volume -> compressor so MAX is loud without clipping. Noise covers crackle and tyre screech. */
-    const clipCurve = k => { const n = 1024, a = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; a[i] = Math.tanh(k * x) / Math.tanh(k); } return a; };
+    /* sound: the engine itself is the per-cylinder synth in engine-audio.js; tyre screech and horn live here.
+       Everything goes volume -> compressor -> limiter so MAX is loud without clipping. */
     const sound = {
       ctx: null,
       init() {
@@ -241,17 +235,15 @@
         const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
         const c = this.ctx = new AC();
         this.master = c.createGain(); this.master.gain.value = 0;
-        const comp = c.createDynamicsCompressor(); comp.threshold.value = -12; comp.ratio.value = 8;
-        this.master.connect(comp); comp.connect(c.destination);
-        const shaper = c.createWaveShaper(); shaper.curve = clipCurve(4); shaper.oversample = '2x';
-        this.lp = c.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.Q.value = 5;
-        this.eng = c.createGain(); this.eng.gain.value = 0;
-        this.oscs = [['sawtooth', 1, 0.6], ['square', 0.5, 0.5], ['sawtooth', 2.01, 0.2]].map(([type, mul, gain]) => {
-          const o = c.createOscillator(), g = c.createGain(); o.type = type; g.gain.value = gain;
-          o.connect(g); g.connect(shaper); o.start(); return { o, mul };
+        const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.2;
+        const limit = c.createDynamicsCompressor(); limit.threshold.value = -2; limit.knee.value = 0; limit.ratio.value = 20; limit.attack.value = 0.001; limit.release.value = 0.08;
+        this.master.connect(comp); comp.connect(limit); limit.connect(c.destination);
+        VelonixAudio.create(c).then(e => {
+          if (!e) return;
+          this.engine = e; e.output.connect(this.master);
+          e.setProfile(eng.sound, eng); sim.attach(e);
         });
-        shaper.connect(this.lp); this.lp.connect(this.eng); this.eng.connect(this.master);
-        const buf = this.noise = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0);
+        const buf = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0);
         for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
         const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
         this.screechF = c.createBiquadFilter(); this.screechF.type = 'bandpass'; this.screechF.Q.value = 7;
@@ -259,22 +251,13 @@
         src.connect(this.screechF); this.screechF.connect(this.screech); this.screech.connect(this.master); src.start();
         this.setVolume();
       },
-      setVolume() { if (this.ctx) this.master.gain.setTargetAtTime(Math.pow(volume / 100, 1.6) * 1.8, this.ctx.currentTime, 0.05); },
-      update(load, on) {
+      setVolume() { if (this.ctx) this.master.gain.setTargetAtTime(Math.pow(volume / 100, 1.6) * 2.2, this.ctx.currentTime, 0.05); },
+      profile() { if (this.engine) this.engine.setProfile(eng.sound, eng); },
+      update() {
         if (!this.ctx) return;
-        const t = this.ctx.currentTime, f = rpm / 60 * eng.cyl / 2;
-        this.oscs.forEach(({ o, mul }) => o.frequency.setTargetAtTime(Math.max(18, f * mul), t, 0.02));
-        this.lp.frequency.setTargetAtTime(260 + f * 2.4 + load * 2000, t, 0.04);
-        this.eng.gain.setTargetAtTime(on ? 0.14 + load * 0.2 : 0, t, on ? 0.05 : 0.35);
+        const t = this.ctx.currentTime;
         this.screech.gain.setTargetAtTime(burn > 0 ? 0.3 : 0, t, 0.08);
         this.screechF.frequency.setTargetAtTime(2300 + Math.sin(t * 11) * 600, t, 0.05);
-      },
-      pop(strength) {
-        const c = this.ctx; if (!c) return;
-        const t = c.currentTime, s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
-        s.buffer = this.noise; bp.type = 'bandpass'; bp.frequency.value = 350 + Math.random() * 900; bp.Q.value = 1.1;
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(strength, t + 0.004); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05 + Math.random() * 0.07);
-        s.connect(bp); bp.connect(g); g.connect(this.master); s.start(t, Math.random() * 0.8, 0.15);
       },
       horn(on) {
         const c = this.ctx; if (!c) return;
@@ -305,14 +288,13 @@
     paintVolume();
 
     function start() {
-      started = true;
-      rpm = Math.max(rpm, eng.idle * 0.3);
+      sim.start();
       box.classList.add('running');
       label('Hold to rev', 'fa-gauge-high');
       if (V) V.set({ lights: 'on' });
     }
     function stop() {
-      started = false; throttle = false; crackle = 0;
+      sim.stop();
       if (burn > 0) endBurnout();
       sound.horn(false);
       box.classList.remove('running');
@@ -323,13 +305,12 @@
     }
     function press() {
       sound.init();
-      if (!started) start();
-      throttle = true;
+      if (!sim.started) start();
+      sim.throttle(true);
       btn.classList.add('held');
     }
     function release() {
-      if (throttle && rpm > eng.limit * 0.55) crackle = 0.45 + rpm / eng.limit * 0.6;
-      throttle = false;
+      sim.throttle(false);
       btn.classList.remove('held');
       sound.init();
     }
@@ -343,24 +324,24 @@
       pops.appendChild(el);
       setTimeout(() => el.remove(), 650);
     }
-    function crack(strength) { sound.pop(strength); if (!reduce || Math.random() < 0.3) popText(strength > 0.7); }
 
     let flashing = 0;
     function flash() {
       if (!V || flashing) return;
-      const base = started ? 'on' : 'drl';
+      const base = sim.started ? 'on' : 'drl';
       ['off', 'on', 'off', 'on', 'off', base].forEach((l, i) => { flashing++; setTimeout(() => { flashing--; V.set({ lights: l }); }, i * 95); });
     }
     function burnout() {
       sound.init();
-      if (!started) start();
+      if (!sim.started) start();
       burn = 2.8;
       $('[data-en-act="burnout"]', box).classList.add('on');
       if (V) V.set({ drive: true, driveRate: 5 });
     }
     function endBurnout() {
       burn = 0;
-      crackle = 0.9;
+      sim.force = null;
+      sim.crackle = 0.9;
       $('[data-en-act="burnout"]', box).classList.remove('on');
       if (V) V.set({ drive: false, driveRate: 1 });
     }
@@ -407,39 +388,26 @@
     const unlock = () => { sound.init(); ['pointerup', 'touchend', 'keydown'].forEach(t => removeEventListener(t, unlock, true)); };
     ['pointerup', 'touchend', 'keydown'].forEach(t => addEventListener(t, unlock, true));
     // rAF stops in a background tab, so switch the engine off with it
-    document.addEventListener('visibilitychange', () => { if (document.hidden) { if (started) stop(); if (sound.ctx) sound.ctx.suspend(); } });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { if (sim.started) stop(); if (sound.ctx) sound.ctx.suspend(); } });
 
     function tick(dt) {
-      if (started && chapter !== 'engine') stop();
-      let target = started ? eng.idle : 0;
-      if (started && throttle) target = eng.limit * 1.08;
+      if (sim.started && chapter !== 'engine') stop();
       if (burn > 0) {
         burn -= dt;
-        target = eng.limit * (0.86 + Math.sin(performance.now() / 85) * 0.06);
+        sim.force = eng.limit * (0.86 + Math.sin(performance.now() / 85) * 0.06);
         if (burn <= 0) endBurnout();
       }
-      rpm += (target - rpm) * Math.min(1, (target > rpm ? eng.up : 1.6) * dt);
-      if (rpm >= eng.limit) {
-        // limiter: cut and bounce, with a bang now and then
-        rpm = eng.limit * (0.93 + Math.random() * 0.03);
-        limitT = 0.14;
-        if (Math.random() < 0.35) crack(0.5);
-      }
-      limitT -= dt;
-      if (crackle > 0) {
-        crackle -= dt;
-        if (Math.random() < dt * 16) crack(0.35 + Math.random() * 0.6);
-      }
-      if (rpm < 5 && !started) rpm = 0;
+      sim.step(dt);
+      const rpm = sim.rpm, started = sim.started;
       peak = Math.max(peak, rpm);
 
-      const frac = rpm / eng.limit, load = started && (throttle || burn > 0) ? 1 : 0;
+      const frac = rpm / eng.limit;
       level += ((started ? (volume / 100) * (0.28 + 0.72 * Math.min(1, frac)) : 0) - level) * Math.min(1, dt * 10);
       db += ((started && volume ? 42 + level * 76 : 0) - db) * Math.min(1, dt * 8);
-      sound.update(load, started);
+      sound.update();
 
       needle.setAttribute('transform', `rotate(${(Math.min(rpm, eng.max) / eng.max * 180 - 90).toFixed(2)} 100 110)`);
-      limitLight.classList.toggle('on', limitT > 0);
+      limitLight.classList.toggle('on', sim.limitT > 0);
       q('rpm').textContent = Math.round(rpm / 10) * 10;
       q('peak').textContent = Math.round(peak / 10) * 10;
       q('db').textContent = Math.round(db);
@@ -453,13 +421,14 @@
     label('Start & rev', 'fa-power-off');
     return {
       tick,
-      busy: () => started,
+      busy: () => sim.started,
       onModel() {
         const next = ENGINES[modelId];
         if (next !== eng) {
           if (burn > 0) endBurnout();
-          rpm = rpm / eng.limit * next.limit;
+          sim.configure(next);
           eng = next; peak = 0;
+          sound.profile();
           sound.horn(false);
         }
         buildGauge();
