@@ -39,7 +39,7 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - 💰 Dynamic pricing system
 - 📊 Live performance stats (speed, acceleration, handling)
 - 🛰️ Live 3D home page: drag to rotate, switch models, scroll-driven camera
-- 🔊 Engine Room: a per-cylinder engine synth. The starter cranks, the engine catches, you rev it into the limiter and it crackles on lift-off. Each vehicle sounds different: cross-plane V8 burble with turbo flutter, screaming V12, supercharger whine, diesel clatter with a blow-off hiss, high-revving inline-4. Volume goes up to MAX, plus horn, headlight flash and burnout
+- 🔊 Engine Room: a per-cylinder engine synth. The starter cranks, the engine catches, revs keep climbing without a limiter and it crackles on lift-off. Each vehicle sounds different: cross-plane V8 burble with turbo flutter, screaming V12, supercharger whine, diesel clatter with a blow-off hiss, high-revving inline-4. Volume goes up to MAX, plus horn, headlight flash and burnout
 - 🎧 Sound check in the Lab: start your build and rev it; the power core (combustion, Ion Drive whine, Dark Matter drone) and the exhaust option change the sound
 - ✨ Signature looks (six one-click themes), Surprise me, undo/redo and reset
 - 🖌️ Hover a colour to try it on the car; any custom colour by picker or hex
@@ -59,9 +59,9 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 ![Velonix home page with a live 3D car](screenshots/home.jpg)
 
 ### Engine Room
-Hold to rev (or press Space) and bounce it off the limiter, lift off for the crackle, and turn the volume all the way to MAX. Horn (H), Flash (F) and Burnout (B) make the 3D car react: the headlights blink, the wheels spin and the camera shakes with the revs.
+Hold to accelerate (or press Space): revs and speed keep climbing with no rev limiter or speed cap. The tachometer expands as needed. Lift off to coast and hear the crackle, or turn the volume all the way to MAX. Horn (H), Flash (F) and Burnout (B) make the 3D car react: the headlights blink, the driven wheels break traction and the camera shakes with the revs. All vehicles roll their wheels at their road speed, with tyre radius taken into account; the floor, neon streaks and dust move past as you accelerate. Both Home and the Lab show live speed in km/h.
 
-The engine sound is synthesized live in an AudioWorklet (`engine-audio.js`). Every cylinder firing is a pressure pulse sent down tuned exhaust pipes; a cross-plane V8 splits its pulses unevenly across two banks, which gives it the burble. On top of that are intake roar, turbo whistle and compressor flutter, supercharger whine, diesel clatter, the starter motor, fuel-cut on the limiter, overrun pops and a short garage reverb.
+The engine sound is synthesized live in an AudioWorklet (`engine-audio.js`). Every cylinder firing is a pressure pulse sent down tuned exhaust pipes; a cross-plane V8 splits its pulses unevenly across two banks, which gives it the burble. On top of that are intake roar, turbo whistle and compressor flutter, supercharger whine, diesel clatter, the starter motor, tuned firing harmonics, overrun pops and a short garage reverb.
 
 | Revving | Volume at MAX + burnout |
 |---------|-------------------------|
@@ -74,7 +74,7 @@ The engine sound is synthesized live in an AudioWorklet (`engine-audio.js`). Eve
 | ![About section](screenshots/about.jpg) | ![The Lab section](screenshots/lab.jpg) |
 
 ### 3D Configurator Lab
-Paint, wheels, lighting, interior and engine options with live pricing and performance stats. Step through the tabs with Back / Next, pick a signature look, hover colours to preview them, then start the engine in the Power tab to hear your build. The Summary tab saves builds to My Garage, copies a share link and exports an image.
+Paint, wheels, lighting, interior and engine options with live pricing and performance stats. Step through the tabs with Back / Next, pick a signature look, hover colours to preview them, then start the engine in the Power tab to hear your build and accelerate with unlimited revs. Wheels, body movement and the moving road follow your speed. The Summary tab saves builds to My Garage, copies a share link and exports an image.
 
 ![3D configurator](screenshots/configurator.jpg)
 
@@ -143,3 +143,7 @@ Sudasun
 
 ## 📄 License
 This project is for educational and portfolio purposes.
+
+## Validation
+
+Run `node --test tests/engine-audio.test.cjs` to check uncapped acceleration, coasting, all power cores, and AudioWorklet output at extreme revs.

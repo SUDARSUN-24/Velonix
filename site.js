@@ -203,7 +203,7 @@
     let eng = ENGINES[modelId];
     const sim = new VelonixAudio.Sim(eng);
     sim.onPop = strength => { if (!reduce || Math.random() < 0.3) popText(strength > 0.7); };
-    let peak = 0, burn = 0, level = 0, db = 0;
+    let peak = 0, burn = 0, level = 0, gaugeMax = eng.max;
     let volume = store.get('velonix-volume', 70);
 
     meter();
@@ -213,13 +213,14 @@
     }
     const segs = $$('[data-en-meter] i', box);
 
-    function buildGauge() {
-      const M = eng.max;
+    function buildGauge(M = eng.max) {
+      gaugeMax = M;
       const pt = (r, rad) => { const a = Math.PI * (1 - r / M); return [100 + rad * Math.cos(a), 110 - rad * Math.sin(a)]; };
       const [x0, y0] = pt(eng.limit, 80), [x1, y1] = pt(M, 80);
       q('red').setAttribute('d', `M${x0.toFixed(1)} ${y0.toFixed(1)} A80 80 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`);
       let h = '';
-      for (let v = 0; v <= M; v += eng.step) {
+      const step = M === eng.max ? eng.step : M / 10;
+      for (let v = 0; v <= M; v += step) {
         const [a0, b0] = pt(v, 72), [a1, b1] = pt(v, 80), [tx, ty] = pt(v, 60), k = v / 1000;
         h += `<line x1="${a0.toFixed(1)}" y1="${b0.toFixed(1)}" x2="${a1.toFixed(1)}" y2="${b1.toFixed(1)}"></line><text x="${tx.toFixed(1)}" y="${(ty + 3).toFixed(1)}">${Number.isInteger(k) ? k : k.toFixed(1)}</text>`;
       }
@@ -290,7 +291,7 @@
     function start() {
       sim.start();
       box.classList.add('running');
-      label('Hold to rev', 'fa-gauge-high');
+      label('Hold to accelerate', 'fa-gauge-high');
       if (V) V.set({ lights: 'on' });
     }
     function stop() {
@@ -301,7 +302,7 @@
       btn.classList.remove('held');
       $$('[data-en-act]', box).forEach(b => b.classList.remove('on'));
       label('Start & rev', 'fa-power-off');
-      if (V) { V.set({ lights: 'drl', drive: false, driveRate: 1 }); V.kick({ dist: 1, el: 0, shake: 0, speed: 0 }); }
+      if (V) { V.set({ lights: 'drl', drive: false }); V.kick({ dist: 1, el: 0, shake: 0, speed: 0 }); }
     }
     function press() {
       sound.init();
@@ -335,15 +336,14 @@
       sound.init();
       if (!sim.started) start();
       burn = 2.8;
+      sim.burnout = true;
       $('[data-en-act="burnout"]', box).classList.add('on');
-      if (V) V.set({ drive: true, driveRate: 5 });
     }
     function endBurnout() {
       burn = 0;
-      sim.force = null;
+      sim.burnout = false;
       sim.crackle = 0.9;
       $('[data-en-act="burnout"]', box).classList.remove('on');
-      if (V) V.set({ drive: false, driveRate: 1 });
     }
     function act(name, down) {
       if (name === 'horn') {
@@ -388,13 +388,12 @@
     const unlock = () => { sound.init(); ['pointerup', 'touchend', 'keydown'].forEach(t => removeEventListener(t, unlock, true)); };
     ['pointerup', 'touchend', 'keydown'].forEach(t => addEventListener(t, unlock, true));
     // rAF stops in a background tab, so switch the engine off with it
-    document.addEventListener('visibilitychange', () => { if (document.hidden) { if (sim.started) stop(); if (sound.ctx) sound.ctx.suspend(); } });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); sim.park(); if (V) V.motion(null); if (sound.ctx) sound.ctx.suspend(); } });
 
     function tick(dt) {
       if (sim.started && chapter !== 'engine') stop();
       if (burn > 0) {
         burn -= dt;
-        sim.force = eng.limit * (0.86 + Math.sin(performance.now() / 85) * 0.06);
         if (burn <= 0) endBurnout();
       }
       sim.step(dt);
@@ -403,21 +402,25 @@
 
       const frac = rpm / eng.limit;
       level += ((started ? (volume / 100) * (0.28 + 0.72 * Math.min(1, frac)) : 0) - level) * Math.min(1, dt * 10);
-      db += ((started && volume ? 42 + level * 76 : 0) - db) * Math.min(1, dt * 8);
       sound.update();
 
-      needle.setAttribute('transform', `rotate(${(Math.min(rpm, eng.max) / eng.max * 180 - 90).toFixed(2)} 100 110)`);
-      limitLight.classList.toggle('on', sim.limitT > 0);
+      if (rpm > gaugeMax * 0.94) buildGauge(Math.ceil(rpm / eng.max) * eng.max * 2);
+      needle.setAttribute('transform', `rotate(${(rpm / gaugeMax * 180 - 90).toFixed(2)} 100 110)`);
+      limitLight.classList.toggle('on', rpm > eng.limit);
+      q('speed').textContent = Math.round(sim.speed * 3.6).toLocaleString('en-US');
       q('rpm').textContent = Math.round(rpm / 10) * 10;
       q('peak').textContent = Math.round(peak / 10) * 10;
-      q('db').textContent = Math.round(db);
       const lit = Math.round(level * SEGMENTS);
       segs.forEach((s, i) => s.classList.toggle('on', i < lit));
-      box.style.setProperty('--throb', (level * frac).toFixed(3));
+      box.style.setProperty('--throb', (level * Math.min(1.5, frac)).toFixed(3));
 
-      if (V && started) V.kick(reduce ? {} : { shake: Math.pow(Math.min(1, frac), 2.4) * 0.013 + (burn > 0 ? 0.006 : 0), dist: 1 - Math.min(1, frac) * 0.04 });
+      if (V) {
+        V.motion(chapter === 'engine' && (started || rpm > 0 || sim.speed > 0) ? sim.motion() : null);
+        if (started) V.kick(reduce ? {} : { shake: Math.pow(Math.min(1.5, frac), 1.7) * 0.012 + (burn > 0 ? 0.008 : 0), dist: 1 + Math.min(1, sim.speed / 100) * 0.12 });
+      }
     }
 
+    buildGauge();
     label('Start & rev', 'fa-power-off');
     return {
       tick,
@@ -433,7 +436,7 @@
         }
         buildGauge();
         q('model').textContent = MODELS[modelId].name;
-        q('spec').textContent = `${eng.label} · redline ${eng.limit.toLocaleString('en-US')} rpm`;
+        q('spec').textContent = `${eng.label} · unlimited revs`;
         $$('[data-en-pick]', box).forEach(b => b.classList.toggle('on', b.dataset.enPick === modelId));
       }
     };

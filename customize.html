@@ -55,7 +55,7 @@
       display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid rgba(188, 19, 254, 0.55);
       box-shadow: 0 4px 24px rgba(188, 19, 254, 0.14);
-      position: relative; z-index: 50;
+      position: relative; z-index: 50; overflow: hidden;
     }
     .brand { display:flex; align-items:baseline; gap:14px; }
     .brand h1 { color: var(--neon-color); font-size: 1.35rem; letter-spacing: 3px; text-shadow: 0 0 12px var(--neon-glow); }
@@ -488,14 +488,16 @@
 
     .sound-check { background:var(--panel-2); border:1px solid #24242c; border-radius:8px; padding:14px 14px 12px; position:relative; overflow:hidden; transition:border-color .3s, box-shadow .3s; }
     .sound-check.running { border-color:rgba(188,19,254,.55); box-shadow:inset 0 0 calc(10px + var(--throb, 0) * 40px) rgba(188,19,254,.18); }
-    .sound-check.limit { border-color:#ff3b5c; }
     .sc-top { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
     .sc-rpm { font:800 1.7rem 'Orbitron', sans-serif; font-variant-numeric:tabular-nums; }
     .sc-top small { color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; font-size:.72rem; margin-left:4px; }
+    .sc-speed { display:flex; align-items:baseline; gap:6px; margin-top:8px; color:var(--neon-color); }
+    .sc-speed b { font:800 1.3rem 'Orbitron', sans-serif; font-variant-numeric:tabular-nums; }
+    .sc-speed small { color:var(--text-dim); letter-spacing:1px; }
+    .sc-speed span { margin-left:auto; color:var(--text-dim); font-size:.72rem; letter-spacing:1px; }
     .sc-state { font:600 .66rem 'Orbitron', sans-serif; letter-spacing:.16em; text-transform:uppercase; color:var(--text-dim); display:inline-flex; align-items:center; gap:6px; }
     .sound-check.running .sc-state { color:var(--neon-color); }
     .sound-check.running .sc-state::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--neon-color); box-shadow:0 0 8px var(--neon-color); animation:livePulse 1s ease-in-out infinite; }
-    .sound-check.limit .sc-state { color:#ff3b5c; }
     .sc-bar { height:8px; background:#1d1d24; border-radius:4px; overflow:hidden; margin:10px 0 12px; position:relative; }
     .sc-bar i { display:block; height:100%; width:0; border-radius:4px; background:linear-gradient(90deg, #7a12b8, var(--neon-color) 70%, #ff3b5c); box-shadow:0 0 10px var(--neon-color); }
     .sc-bar b { position:absolute; top:0; bottom:0; width:2px; background:#ff3b5c; opacity:.8; }
@@ -505,7 +507,6 @@
       font:700 .85rem 'Orbitron', sans-serif; letter-spacing:1.5px; text-transform:uppercase; box-shadow:0 0 16px rgba(188,19,254,.35); transition:transform .12s, box-shadow .2s, background .2s;
     }
     .sc-rev.held { transform:scale(.97); background:#d020ff; box-shadow:0 0 34px var(--neon-color); }
-    .sound-check.limit .sc-rev.held { background:#ff3b5c; box-shadow:0 0 34px #ff3b5c; }
     .sc-stop { width:46px; height:auto; }
     .sc-vol { display:flex; align-items:center; gap:10px; margin-top:12px; color:var(--text-dim); font-size:.85rem; }
     .sc-vol input { flex:1; accent-color:var(--neon-color); }
@@ -1806,7 +1807,7 @@
             const w = cache[key] || (cache[key] = buildWheel(spec, V.wheelMats, s.side < 0));
             const spin = w.spin.clone(), fixed = w.fixed.clone();
             s.mir.add(spin); s.mir.add(fixed);
-            s.spinGroup = spin;
+            s.spinGroup = spin; s.radius = spec.R;
         }
     }
 
@@ -3248,6 +3249,7 @@
     // 13. ANIMATION LOOP
     // ==========================================
     let windowsDown = 0, windowsTarget = 0, driveSpeed = 0;
+    let homeMotion = null, roadSpeed = 0, driveLoad = 0;
     function animate() {
         requestAnimationFrame(animate);
         const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
@@ -3268,14 +3270,24 @@
                 const g = V.parts[name].glass;
                 if (g) g.position.y = g.userData.baseY - windowsDown * (V.windowDrop || 0.4) * 0.5;
             }
-            driveSpeed += ((state.drive ? 1 : 0) - driveSpeed) * (1 - Math.exp(-dt * 1.5));
+            const motion = SHOWROOM ? homeMotion : labEngine.motion();
+            const road = motion ? motion.speed : state.drive ? 8 * (state.driveRate || 1) : 0;
+            roadSpeed += (road - roadSpeed) * (1 - Math.exp(-dt * 8));
+            driveLoad += ((motion ? motion.load : 0) - driveLoad) * (1 - Math.exp(-dt * 5));
+            driveSpeed = Math.min(1, roadSpeed / 3);
             for (const s of V.wheelSlots) {
-                if (s.spinGroup) s.spinGroup.rotation.z -= driveSpeed * dt * 14 * (state.driveRate || 1);
-                if (s.front) s.steer.rotation.y = Math.sin(t * 0.7) * 0.28 * driveSpeed * (s.steerSign ?? 1);
+                const speed = motion && motion.burnout && !s.front ? motion.wheelSpeed : roadSpeed;
+                if (s.spinGroup) s.spinGroup.rotation.z = (s.spinGroup.rotation.z - speed / (s.radius || 0.35) * dt) % (Math.PI * 2);
+                if (s.front) s.steer.rotation.y = Math.sin(t * 0.7) * (motion ? 0.018 : 0.28) * driveSpeed * (s.steerSign ?? 1);
             }
             if (V.onFrame) V.onFrame(dt, t, driveSpeed);
             const vb = labEngine.vibe(dt, t);
-            V.group.position.y = vb ? vb.y : 0; V.group.rotation.x = vb ? vb.roll : 0;
+            const intensity = Math.min(1.5, motion ? motion.intensity : 0);
+            const bounce = reduceMotion ? 0 : Math.sin(t * (14 + Math.min(60, roadSpeed))) * Math.min(0.012, roadSpeed * 0.00013);
+            V.group.position.y = (vb ? vb.y : 0) + bounce;
+            V.group.position.x = reduceMotion ? 0 : -driveLoad * V.fit.radius * 0.025;
+            V.group.rotation.x = (vb ? vb.roll : 0) + (reduceMotion ? 0 : Math.sin(t * 2.5) * 0.006 * intensity);
+            V.group.rotation.z = reduceMotion ? 0 : driveLoad * 0.012 * Math.min(1, intensity);
             if (V.extras.core) V.extras.core.scale.setScalar(state.sel.engine === 'antimatter' ? 1 + Math.sin(t * 4) * 0.12 : 1);
         }
         if (camTween) {
@@ -3326,6 +3338,18 @@
         fx.grid.material.transparent = true; fx.grid.material.depthWrite = false;
         fx.grid.position.y = -0.056; g.add(fx.grid);
 
+        // Long road markers and wind streaks make acceleration readable from every camera angle.
+        fx.road = new THREE.Group(); g.add(fx.road);
+        fx.roadMat = glowMat(); fx.roadMat.color.set('#b55cff'); fx.roadMat.opacity = 0;
+        const streakGeo = new THREE.BoxGeometry(1, 0.014, 0.035);
+        for (let i = 0; i < 48; i++) {
+            const m = new THREE.Mesh(streakGeo, fx.roadMat);
+            const side = i % 2 ? 1 : -1;
+            m.position.set((i / 48) * 80 - 40, i < 24 ? 0.01 : 0.4 + (i % 5) * 0.55, side * (2.5 + (i % 7) * 0.5));
+            m.userData.length = 0.8 + (i % 5) * 0.45;
+            fx.road.add(m);
+        }
+
         const N = 420, pos = new Float32Array(N * 3);
         fx.dustSpeed = new Float32Array(N);
         for (let i = 0; i < N; i++) {
@@ -3365,6 +3389,7 @@
         fx.innerMat.color.copy(c).multiplyScalar(1.4 * f.ring);
         fx.dashMat.color.copy(c).multiplyScalar(2.6 * f.ring);
         fx.grid.material.color.copy(c); fx.grid.material.opacity = f.grid;
+        fx.roadMat.color.copy(c).multiplyScalar(state.env === 1 ? 0.8 : 2.5);
         fx.dustMat.color.set(state.env === 2 ? '#e7b8ff' : '#cfc6e8'); fx.dustMat.opacity = f.dust; fx.dust.visible = f.dust > 0;
         fx.scanMat.color.copy(c).multiplyScalar(state.env === 1 ? 1.6 : 4.5);
     }
@@ -3394,11 +3419,22 @@
 
     function updateFX(dt, t) {
         if (!fx.group) return;
+        const travel = reduceMotion ? 0 : roadSpeed;
+        fx.grid.position.x = travel > 0.02 ? (fx.grid.position.x - travel * dt) % 1 : 0;
+        fx.road.visible = travel > 0.2;
+        fx.roadMat.opacity = Math.min(0.6, travel / 90);
+        for (const line of fx.road.children) {
+            line.position.x = ((line.position.x - travel * dt + 40) % 80 + 80) % 80 - 40;
+            line.scale.x = line.userData.length + Math.min(10, travel * 0.035);
+        }
         if (!reduceMotion) fx.dash.rotation.y += dt * 0.22;
         fx.ringMat.opacity = reduceMotion ? 1 : 0.78 + Math.sin(t * 2.2) * 0.22;
         if (fx.dust.visible && !reduceMotion) {
             const p = fx.dustPos.array;
-            for (let i = 0; i < fx.dustSpeed.length; i++) { p[i * 3 + 1] += fx.dustSpeed[i] * dt; if (p[i * 3 + 1] > 5) p[i * 3 + 1] = 0; }
+            for (let i = 0; i < fx.dustSpeed.length; i++) {
+                p[i * 3 + 1] += fx.dustSpeed[i] * dt; if (p[i * 3 + 1] > 5) p[i * 3 + 1] = 0;
+                p[i * 3] = ((p[i * 3] - travel * dt + 12) % 24 + 24) % 24 - 12;
+            }
             fx.dustPos.needsUpdate = true;
             fx.dust.rotation.y += dt * 0.025;
         }
@@ -3657,7 +3693,7 @@
     function wheelKey() { return state.sel.wheel + '|' + state.sel.wsize; }
 
     function setModel(m) {
-        labEngine.stop();
+        labEngine.stop(true);
         state.model = m;
         ensureDefaults();
         windowsTarget = 0;
@@ -3792,7 +3828,6 @@
     function driveShowroom(dt) {
         const V = vehicle, inside = state.view === 'interior';
         const k = 1 - Math.exp(-dt * 2.4);
-        if (fx.grid) fx.grid.position.x = kick.speed ? (fx.grid.position.x - kick.speed * dt) % 1 : 0;
         show.ox = lerp(show.ox, show.x, k); show.oy = lerp(show.oy, show.y, k);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         if (w && h) camera.setViewOffset(w, h, -show.ox * w, -show.oy * h, w, h);
@@ -3836,6 +3871,7 @@
         },
         nudge(dx, dy = 0) { show.az -= dx * 0.008; show.el = clamp(show.el + dy * 0.004, 0.02, 0.75); },
         kick(o) { for (const key of ['dist', 'el', 'shake', 'speed']) if (o[key] !== undefined) kick[key] = o[key]; },
+        motion(o) { homeMotion = o; },
         scrub(v) { show.scrub = v; },
         // option change without toast, panel render or scan pass
         quiet(group, id) {
@@ -4066,7 +4102,7 @@
     // ---------- sound check: start the engine and rev it (engine-audio.js); the sound follows the power core and exhaust ----------
     const labEngine = (() => {
         const A = window.VelonixAudio;
-        if (!A || SHOWROOM) return { available: false, html: () => '', bind() {}, sync() {}, tick() {}, toggle() {}, press() {}, release() {}, stop() {}, running: () => false, vibe: () => null };
+        if (!A || SHOWROOM) return { available: false, html: () => '', bind() {}, sync() {}, tick() {}, toggle() {}, press() {}, release() {}, stop() {}, running: () => false, vibe: () => null, motion: () => null };
         const sim = new A.Sim(A.ENGINES.spectre);
         let ctx = null, master = null, engine = null, spec = null, held = false, prevLights = null, shown = -1, roll = 0;
         let volume = 70;
@@ -4107,31 +4143,33 @@
             prevLights = state.lights; state.lights = 'on'; applyLights();
             renderToolbar(); paint();
         }
-        function stop() {
-            if (!sim.started) return;
+        function stop(park = false) {
+            if (!sim.started) { if (park === true) sim.park(); return; }
             sim.stop(); held = false;
+            if (park === true) sim.park();
             if (prevLights) { state.lights = prevLights; prevLights = null; applyLights(); }
             renderToolbar(); paint();
         }
         function press() { init(); if (!sim.started) start(); held = true; sim.throttle(true); paint(); }
         function release() { if (!held) return; held = false; sim.throttle(false); paint(); }
         function toggle() { if (sim.started) stop(); else start(); }
-        const stateText = () => !sim.started ? 'Engine off' : sim.crankT > 0 ? 'Cranking' : sim.limitT > 0 ? 'Limiter' : held ? 'On throttle' : spec.idle === 0 ? 'Ready' : 'Idling';
+        const stateText = () => !sim.started ? 'Engine off' : sim.crankT > 0 ? 'Cranking' : held ? (sim.rpm > spec.limit ? 'Overdrive' : 'Accelerating') : sim.speed > 1 ? 'Coasting' : spec.idle === 0 ? 'Ready' : 'Idling';
         function paint() {
             const box = $('soundCheck'); if (!box || !spec) return;
             box.classList.toggle('running', sim.started);
-            $('scRev').innerHTML = sim.started ? '<i class="fas fa-gauge-high"></i> <span>Hold to rev</span>' : '<i class="fas fa-power-off"></i> <span>Start engine</span>';
+            $('scRev').innerHTML = sim.started ? '<i class="fas fa-gauge-high"></i> <span>Hold to accelerate</span>' : '<i class="fas fa-power-off"></i> <span>Start engine</span>';
             $('scRev').classList.toggle('held', held);
             $('scStop').disabled = !sim.started;
             box._st = stateText(); $('scState').innerText = box._st;
         }
         function tick(dt) {
-            if (!spec || (!sim.started && sim.rpm <= 0)) return;
+            if (!spec || (!sim.started && sim.rpm <= 0 && sim.speed <= 0)) return;
+            sim.roadKph = state.model.vmax * (state.sel.engine === 'v8' ? 1 : 1.25);
             sim.step(dt);
             const box = $('soundCheck'); if (!box) return;
             const r = Math.round(sim.rpm / 10) * 10;
-            if (r !== shown) { shown = r; $('scRpm').innerText = r.toLocaleString('en-US'); $('scBar').style.width = Math.min(100, sim.rpm / spec.max * 100).toFixed(1) + '%'; }
-            box.classList.toggle('limit', sim.limitT > 0);
+            if (r !== shown) { shown = r; $('scRpm').innerText = r.toLocaleString('en-US'); $('scBar').style.width = (sim.rpm / (sim.rpm + spec.limit) * 100).toFixed(1) + '%'; }
+            $('scSpeed').innerText = Math.round(sim.speed * 3.6).toLocaleString('en-US');
             box.style.setProperty('--throb', Math.min(1, sim.rpm / spec.limit).toFixed(2));
             const st = stateText(); if (st !== box._st) { box._st = st; $('scState').innerText = st; }
         }
@@ -4147,13 +4185,14 @@
             return `<div class="group"><div class="group-title"><h4>Sound Check</h4><span id="scName">${s.label}</span></div>
               <div class="sound-check" id="soundCheck">
                 <div class="sc-top"><div><b class="sc-rpm" id="scRpm">${(Math.round(sim.rpm / 10) * 10).toLocaleString('en-US')}</b><small>rpm</small></div><span class="sc-state" id="scState">Engine off</span></div>
-                <div class="sc-bar"><i id="scBar" style="width:${Math.min(100, sim.rpm / s.max * 100).toFixed(1)}%"></i>${s.limiter === false ? '' : `<b style="left:${(s.limit / s.max * 100).toFixed(1)}%"></b>`}</div>
+                <div class="sc-speed"><b id="scSpeed">${Math.round(sim.speed * 3.6).toLocaleString('en-US')}</b><small>km/h</small><span>NO LIMITS</span></div>
+                <div class="sc-bar"><i id="scBar" style="width:${(sim.rpm / (sim.rpm + s.limit) * 100).toFixed(1)}%"></i></div>
                 <div class="sc-btns">
                   <button class="sc-rev" id="scRev" type="button"></button>
                   <button class="icon-btn sc-stop" id="scStop" type="button" title="Engine off (E)" aria-label="Engine off"><i class="fas fa-power-off"></i></button>
                 </div>
                 <label class="sc-vol"><i class="fas fa-volume-high"></i><input type="range" min="0" max="100" value="${volume}" id="scVol" aria-label="Volume"><em id="scVolVal">${volume >= 100 ? 'MAX' : volume}</em></label>
-                <p class="sc-hint">Hold to rev, or hold <kbd>Space</kbd>. Swap the power core or exhaust above and hear the difference.</p>
+                <p class="sc-hint">Hold to accelerate, or hold <kbd>Space</kbd>. Unlimited revs. Wheels and road follow your speed. Swap the core or exhaust to change the sound.</p>
               </div></div>`;
         }
         function bind() {
@@ -4176,8 +4215,8 @@
             paint();
         }
         // browsers keep audio locked until a gesture; a background tab stops the engine
-        document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); if (ctx) ctx.suspend(); } });
-        return { available: true, html, bind, sync, tick, toggle, press, release, stop, running: () => sim.started, vibe };
+        document.addEventListener('visibilitychange', () => { if (document.hidden) { stop(); sim.park(); if (ctx) ctx.suspend(); } });
+        return { available: true, html, bind, sync, tick, toggle, press, release, stop, running: () => sim.started, vibe, motion: () => spec && (sim.started || sim.speed > 0 || sim.rpm > 0) ? sim.motion() : null };
     })();
 
     // ---------- keyboard ----------
@@ -4195,8 +4234,8 @@
             if (mod && e.code === 'KeyY') { e.preventDefault(); redo(); return; }
             if (mod || e.altKey) return;
             if (e.code === 'Space') {
-                // a focused button keeps Space for itself until the engine is running
-                if (!labEngine.available || (!labEngine.running() && e.target.closest('button, a'))) return;
+                // Other focused controls keep their normal Space action; the throttle can start the engine.
+                if (!labEngine.available || (!labEngine.running() && e.target.closest('button, a') && !e.target.closest('#scRev'))) return;
                 e.preventDefault(); if (!e.repeat) labEngine.press();
                 return;
             }

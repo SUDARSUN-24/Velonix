@@ -2,7 +2,7 @@
 // A per-cylinder synth in an AudioWorklet: every firing is a pressure pulse sent down tuned exhaust pipes
 // (a cross-plane V8 splits them into two uneven banks, which is where the burble comes from), plus intake
 // roar, turbo whistle and flutter, supercharger whine, diesel clatter, the starter motor and backfires.
-// Sim runs the rpm (crank, catch, rev, limiter, crackle) so both pages drive the engine the same way.
+// Sim shares uncapped revs, road speed, cranking and lift-off crackle between both pages.
 (() => {
   const WORKLET = `
 const TAU = Math.PI * 2;
@@ -29,7 +29,7 @@ class Band {
 class VelonixEngine extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     const k = (name, max) => ({ name, defaultValue: 0, minValue: 0, maxValue: max, automationRate: 'k-rate' });
-    return [k('rpm', 20000), k('load', 1), k('ign', 1), k('starter', 1), k('cut', 1)];
+    return [k('rpm', 1e12), k('load', 1), k('ign', 1), k('starter', 1)];
   }
   constructor() {
     super();
@@ -37,6 +37,7 @@ class VelonixEngine extends AudioWorkletProcessor {
     this.a = { rpm: co(0.012), load: co(0.03), level: co(0.06), up: co(0.7), down: co(0.25), clat: Math.exp(-1 / (sr * 0.0007)), zap: Math.exp(-1 / (sr * 0.006)), wind: co(0.002) };
     this.p = null; this.n = 0; this.np = 1;
     this.crank = 0; this.slot = -1;
+    this.firingPhase = 0;
     this.rpm = 0; this.load = 0; this.level = 0; this.boost = 0; this.prevLoad = 0;
     this.pulse = []; this.cylVar = [];
     this.pipes = [new Pipe(), new Pipe()]; this.muff = [new Pipe(), new Pipe()];
@@ -65,17 +66,16 @@ class VelonixEngine extends AudioWorkletProcessor {
     });
     this.slot = -1;
   }
-  fire(k, rpm, load, ign, cut) {
+  fire(k, rpm, load, ign) {
     const p = this.p, q = this.pulse[k];
-    q.dur = clamp(120 / Math.max(rpm, 60) * p.width, 0.0006, 0.016);
+    q.dur = clamp(120 / Math.max(rpm, 60) * p.width, 0.00015, 0.016);
     q.age = 0;
     const lope = p.lope * clamp(1 - (rpm - p.idle) / (p.idle * 2.5), 0, 1);
     let a = 1 + this.cylVar[k] * (0.06 + lope) + (Math.random() - 0.5) * 0.1;
     if (!ign) a *= 0.16;                                    // compression only: cranking or winding down
     else {
       a *= 0.42 + 0.58 * load;
-      if (cut && Math.random() < 0.72) a *= 0.06;           // limiter fuel cut
-      else if (load < 0.1 && rpm > p.idle * 1.7) {          // overrun: misfires and the odd burble pop
+      if (load < 0.1 && rpm > p.idle * 1.7) {               // overrun: misfires and the odd burble pop
         if (Math.random() < 0.1) a *= 0.12;
         if (Math.random() < p.burble * 0.035 && this.pops.length < 8) this.pops.push({ t: 0, a: 0.12 + Math.random() * 0.25 });
       }
@@ -87,7 +87,10 @@ class VelonixEngine extends AudioWorkletProcessor {
     const out = outputs[0], L = out[0], R = out[1] || out[0], N = L.length, p = this.p;
     if (!p) { L.fill(0); if (R !== L) R.fill(0); return true; }
     const sr = sampleRate, dt = 1 / sr, a = this.a, ph = this.ph;
-    const tRpm = P.rpm[0], tLoad = P.load[0], ign = P.ign[0] > 0.5, starter = P.starter[0] > 0.5, cut = P.cut[0] > 0.5;
+    // Keep climbing in pitch above the normal operating range without ultrasonic aliasing.
+    const rawRpm = P.rpm[0], over = Math.max(0, rawRpm / p.limit - 1);
+    const tRpm = over ? p.limit * (1 + Math.log1p(over) * 0.65) : rawRpm;
+    const tLoad = P.load[0], ign = P.ign[0] > 0.5, starter = P.starter[0] > 0.5;
     const limit = p.limit, kind = p.kind;
     // lifting off with boost up: compressor flutter (or a diesel's blow-off hiss)
     if (p.turbo && this.prevLoad > 0.5 && tLoad < 0.2 && this.boost > 0.35) { this.flutLen = this.flutT = p.bov ? 0.45 : 0.6; this.flutAmt = this.boost; }
@@ -115,7 +118,7 @@ class VelonixEngine extends AudioWorkletProcessor {
         this.crank += rpm / 120 * dt;                       // position in the 720° four-stroke cycle
         if (this.crank >= 1) this.crank -= 1;
         const slot = Math.floor(this.crank * n);
-        if (slot !== this.slot) { this.slot = slot; if (rpm > 30) this.fire(slot, rpm, load, ign, cut); }
+        if (slot !== this.slot) { this.slot = slot; if (rpm > 30) this.fire(slot, rpm, load, ign); }
 
         let b0 = 0, b1 = 0, env = 0;
         for (let k = 0; k < n; k++) {
@@ -137,8 +140,18 @@ class VelonixEngine extends AudioWorkletProcessor {
           l = e0 * 0.82 + e1 * 0.38; r = e1 * 0.82 + e0 * 0.38;   // the two banks sit a little apart
         } else l = r = e0;
 
-        // induction roar: band-passed air noise that rides the firing pulses
-        extra += this.intake.run(nz, bp(180 + rpm * 0.16 * p.intakeMul), 0.35) * (0.15 + env * 0.6) * load * (0.25 + frac) * p.intake;
+        // Tuned firing harmonics carry the engine note; induction adds texture rather than white-noise hiss.
+        const firingHz = rpm / 120 * n;
+        this.firingPhase = (this.firingPhase + firingHz * dt) % 2;
+        const phase = TAU * this.firingPhase;
+        let note = 0;
+        for (let h = 1; h <= 5; h++) {
+          const fade = clamp((sr * 0.44 - firingHz * h) / (sr * 0.12), 0, 1);
+          note += Math.sin(phase * h + h * 0.16) * fade / (h * (1.2 + h * 0.16));
+        }
+        const bank = Math.sin(phase * 0.5) * (p.banks ? 0.19 : 0.07);
+        extra += (note * (0.24 + 0.2 * load) + bank) * (ign ? 1 : 0.15);
+        extra += this.intake.run(nz, bp(180 + rpm * 0.13 * p.intakeMul), 0.55) * (0.12 + env * 0.28) * load * (0.25 + Math.min(1.8, frac)) * p.intake * 0.55;
 
         if (p.turbo) {
           const bt = load * clamp((frac - 0.22) / 0.5, 0, 1);
@@ -155,7 +168,7 @@ class VelonixEngine extends AudioWorkletProcessor {
           extra += s * fe * this.flutAmt * 0.6;
         }
         if (p.blower) {
-          ph.sc += rpm / 60 * p.blower * dt; if (ph.sc > 1) ph.sc -= 1;
+          ph.sc += sr * 0.18 * Math.tanh(rpm / 60 * p.blower / (sr * 0.18)) * dt; ph.sc %= 1;
           extra += (Math.sin(TAU * ph.sc) + 0.3 * Math.sin(2 * TAU * ph.sc)) * (0.006 + 0.032 * load * Math.min(1, frac));
         }
         if (p.diesel) { extra += (nz - this.nPrev) * this.clat * 0.16; this.clat *= a.clat; }
@@ -165,7 +178,7 @@ class VelonixEngine extends AudioWorkletProcessor {
           extra += ((2 * ph.st - 1) * 0.09 + Math.sin(TAU * ph.st * 4) * 0.03 + nz * 0.02) * (0.75 + 0.25 * comp);
         }
       } else if (kind === 'electric') {
-        const fr = clamp(frac, 0, 1.2), on = ign ? 1 : 0;
+        const fr = Math.log1p(frac), on = ign ? 1 : 0;
         ph.e1 += (40 + fr * 1500) * dt; if (ph.e1 > 1) ph.e1 -= 1;
         let s = (Math.sin(TAU * ph.e1) * 0.5 + Math.sin(2 * TAU * ph.e1) * 0.22 + Math.sin(3 * TAU * ph.e1 + 0.3) * 0.12) * (0.2 + 0.8 * load) * Math.min(1, fr * 6);
         ph.inv += 520 * (1 + Math.floor(fr * 5)) * dt; if (ph.inv > 1) ph.inv -= 1;      // stepped inverter tones
@@ -176,7 +189,7 @@ class VelonixEngine extends AudioWorkletProcessor {
         l = r = s;
       } else {
         // dark matter core: an FM drone that climbs with the revs, a beating sub, shimmer and arcing zaps
-        const fr = clamp(frac, 0, 1.2), f0 = 32 + fr * 180;
+        const fr = Math.log1p(frac), f0 = 32 + fr * 180;
         ph.car += f0 * dt; if (ph.car > 1) ph.car -= 1;
         ph.fm += f0 * 1.503 * dt; if (ph.fm > 1) ph.fm -= 1;
         ph.sub += (f0 * 0.5 + 0.7) * dt; if (ph.sub > 1) ph.sub -= 1;
@@ -195,7 +208,7 @@ class VelonixEngine extends AudioWorkletProcessor {
       const lt = live ? 0.32 + 0.38 * load + 0.3 * Math.min(1, frac) : 0;
       this.level += (lt - this.level) * a.level;
       // idle and low revs get a lift so they still carry on small speakers
-      const g = this.level * p.gain * (1 + 1.2 * (1 - Math.min(1, frac * 2.5))), c = extra + crack * 0.35;
+      const g = this.level * p.gain * (1 + 0.8 * (1 - Math.min(1, frac * 2.5))), c = extra + crack * 0.35;
       L[i] = Math.tanh((l + c) * g);
       if (R !== L) R[i] = Math.tanh((r + c) * g);
     }
@@ -219,16 +232,16 @@ registerProcessor('velonix-engine', VelonixEngine);
   // Per vehicle: sound picks the voice above, up is how fast it spins up under throttle, crank how long the starter turns.
   // max/step lay out the Engine Room's rev counter.
   const ENGINES = {
-    spectre:  { label: 'Twin-turbo V8',   sound: 'v8tt',    idle: 850,  limit: 7800,  max: 9000,  step: 1000, up: 2.6 },
-    vortex:   { label: 'V12',             sound: 'v12',     idle: 1000, limit: 9200,  max: 10000, step: 1000, up: 3.4 },
-    behemoth: { label: 'Supercharged V8', sound: 'scv8',    idle: 750,  limit: 6800,  max: 8000,  step: 1000, up: 2.0 },
-    hauler:   { label: 'Inline-6 diesel', sound: 'diesel6', idle: 600,  limit: 2300,  max: 3000,  step: 500,  up: 1.5, crank: 0.9, flare: 1.4 },
-    titan:    { label: 'Inline-4',        sound: 'i4',      idle: 1300, limit: 13000, max: 14000, step: 2000, up: 4.6, crank: 0.4 }
+    spectre:  { label: 'Twin-turbo V8',   sound: 'v8tt',    idle: 850,  limit: 7800,  max: 9000,  step: 1000, up: 2.6, roadKph: 290 },
+    vortex:   { label: 'V12',             sound: 'v12',     idle: 1000, limit: 9200,  max: 10000, step: 1000, up: 3.4, roadKph: 340 },
+    behemoth: { label: 'Supercharged V8', sound: 'scv8',    idle: 750,  limit: 6800,  max: 8000,  step: 1000, up: 2.0, roadKph: 250 },
+    hauler:   { label: 'Inline-6 diesel', sound: 'diesel6', idle: 600,  limit: 2300,  max: 3000,  step: 500,  up: 1.5, crank: 0.9, flare: 1.4, roadKph: 120 },
+    titan:    { label: 'Inline-4',        sound: 'i4',      idle: 1300, limit: 13000, max: 14000, step: 2000, up: 4.6, crank: 0.4, roadKph: 303 }
   };
   // The Lab's alternative power cores
   const CORES = {
-    electric:   { label: 'Ion Drive',        sound: 'electric', idle: 0,    limit: 16000, max: 16000, step: 2000, up: 2.2, crank: 0, limiter: false, pops: false },
-    antimatter: { label: 'Dark Matter Core', sound: 'core',     idle: 1500, limit: 9000,  max: 10000, step: 1000, up: 2.4, crank: 0, limiter: false, pops: false, flare: 2.4 }
+    electric:   { label: 'Ion Drive',        sound: 'electric', idle: 0,    limit: 16000, max: 16000, step: 2000, up: 2.2, crank: 0, pops: false },
+    antimatter: { label: 'Dark Matter Core', sound: 'core',     idle: 1500, limit: 9000,  max: 10000, step: 1000, up: 2.4, crank: 0, pops: false, flare: 2.4 }
   };
 
   // Short garage reverb so it sounds like a room, not a plugin
@@ -246,7 +259,7 @@ registerProcessor('velonix-engine', VelonixEngine);
       this.ctx = ctx;
       this.node = new AudioWorkletNode(ctx, 'velonix-engine', { numberOfInputs: 0, outputChannelCount: [2] });
       this.prm = {};
-      for (const k of ['rpm', 'load', 'ign', 'starter', 'cut']) this.prm[k] = this.node.parameters.get(k);
+      for (const k of ['rpm', 'load', 'ign', 'starter']) this.prm[k] = this.node.parameters.get(k);
       this.low = ctx.createBiquadFilter(); this.low.type = 'lowshelf'; this.low.frequency.value = 110;
       this.high = ctx.createBiquadFilter(); this.high.type = 'highshelf'; this.high.frequency.value = 2600;
       this.lp = ctx.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.Q.value = 0.7;
@@ -272,11 +285,11 @@ registerProcessor('velonix-engine', VelonixEngine);
       this.output.gain.setTargetAtTime(loud, t, 0.1);
       this.lpMul = (1 - deep * 0.25) * (1 + rasp * 0.3);
     }
-    set({ rpm = 0, load = 0, ign = false, starter = false, cut = false }) {
+    set({ rpm = 0, load = 0, ign = false, starter = false }) {
       const p = this.profile; if (!p) return;
       const t = this.ctx.currentTime, frac = Math.min(1.1, rpm / p.limit);
       this.prm.rpm.setValueAtTime(rpm, t); this.prm.load.setValueAtTime(load, t);
-      this.prm.ign.setValueAtTime(ign ? 1 : 0, t); this.prm.starter.setValueAtTime(starter ? 1 : 0, t); this.prm.cut.setValueAtTime(cut ? 1 : 0, t);
+      this.prm.ign.setValueAtTime(ign ? 1 : 0, t); this.prm.starter.setValueAtTime(starter ? 1 : 0, t);
       this.lp.frequency.setTargetAtTime(Math.min(16000, (p.lp[0] + frac * p.lp[1] + load * 1800) * this.lpMul), t, 0.05);
     }
     pop(strength) { this.node.port.postMessage({ pop: strength }); }
@@ -299,12 +312,13 @@ registerProcessor('velonix-engine', VelonixEngine);
     return new Engine(ctx);
   }
 
-  // rpm model: crank on the starter, catch and flare, rev under throttle, bounce off the limiter, crackle on lift-off
+  // Arcade drivetrain: continuous acceleration beyond the reference redline, inertia and lift-off crackle.
   class Sim {
-    constructor(spec) { this.rpm = 0; this.started = false; this.ign = false; this.hold = false; this.force = null; this.crankT = 0; this.flareT = 0; this.limitT = 0; this.crackle = 0; this.engine = null; this.onPop = null; this.configure(spec); }
+    constructor(spec) { this.rpm = 0; this.speed = 0; this.started = false; this.ign = false; this.hold = false; this.burnout = false; this.crankT = 0; this.flareT = 0; this.crackle = 0; this.engine = null; this.onPop = null; this.configure(spec); }
     configure(spec) {
       if (this.spec && this.rpm) this.rpm = this.rpm / this.spec.limit * spec.limit;
-      this.spec = Object.assign({ crank: 0.55, flare: 1.6, limiter: true, pops: true }, spec);
+      this.spec = Object.assign({ crank: 0.55, flare: 1.6, pops: true }, spec);
+      this.roadKph = spec.roadKph || 290;
     }
     attach(engine) { this.engine = engine; }
     start() {
@@ -313,7 +327,8 @@ registerProcessor('velonix-engine', VelonixEngine);
       if (this.spec.crank > 0 && this.rpm < this.spec.idle * 0.5) { this.crankT = this.spec.crank; this.ign = false; }
       else { this.ign = true; this.flareT = this.rpm < this.spec.idle * 0.5 ? 0.5 : 0; }
     }
-    stop() { this.started = false; this.ign = false; this.hold = false; this.force = null; this.crankT = 0; this.crackle = 0; }
+    stop() { this.started = false; this.ign = false; this.hold = false; this.burnout = false; this.crankT = 0; this.crackle = 0; }
+    park() { this.stop(); this.rpm = 0; this.speed = 0; if (this.engine) this.engine.set({ rpm: 0, load: 0, ign: false, starter: false }); }
     throttle(on) {
       if (!on && this.hold && this.spec.pops && this.rpm > this.spec.limit * 0.55) this.crackle = 0.45 + this.rpm / this.spec.limit * 0.6;
       this.hold = on;
@@ -328,26 +343,25 @@ registerProcessor('velonix-engine', VelonixEngine);
       } else if (this.started) {
         target = s.idle;
         if (this.flareT > 0) { this.flareT -= dt; target = Math.max(s.idle * s.flare, 400); }
-        if (this.hold) target = s.limit * (s.limiter ? 1.08 : 1);
-        if (this.force !== null) target = this.force;
       }
-      const rate = target > this.rpm ? (this.crankT > 0 ? 8 : s.up) : this.ign ? 1.6 : 1.1;
-      this.rpm += (target - this.rpm) * Math.min(1, rate * dt);
-      if (s.limiter && this.ign && this.rpm >= s.limit) {
-        // limiter: cut and bounce, with a bang now and then
-        this.rpm = s.limit * (0.93 + Math.random() * 0.03);
-        this.limitT = 0.14;
-        if (s.pops && Math.random() < 0.35) this.crack(0.5);
+      if (this.started && this.ign && (this.hold || this.burnout)) {
+        this.rpm += s.limit * s.up * 0.55 * dt / Math.sqrt(1 + this.rpm / s.limit * 0.35);
+      } else {
+        const rate = target > this.rpm ? (this.crankT > 0 ? 8 : s.up) : this.ign ? 1.6 : 1.1;
+        this.rpm += (target - this.rpm) * (1 - Math.exp(-rate * dt));
       }
-      this.limitT -= dt;
       if (this.crackle > 0) {
         this.crackle -= dt;
         if (Math.random() < dt * 16) this.crack(0.35 + Math.random() * 0.6);
       }
       if (!this.started && this.rpm < 5) this.rpm = 0;
-      this.load = this.started && this.ign && (this.hold || this.force !== null) ? 1 : 0;
-      if (this.engine) this.engine.set({ rpm: this.rpm, load: this.load, ign: this.ign, starter: this.crankT > 0, cut: this.limitT > 0 });
+      this.load = this.started && this.ign && (this.hold || this.burnout) ? 1 : 0;
+      const roadTarget = this.started && this.ign ? Math.max(0, (this.rpm - s.idle) / (s.limit - s.idle)) * this.roadKph / 3.6 * (this.burnout ? 0.12 : 1) : 0;
+      this.speed += (roadTarget - this.speed) * (1 - Math.exp(-dt * (this.started ? 1.7 : 3.5)));
+      if (this.speed < 0.02 && roadTarget === 0) this.speed = 0;
+      if (this.engine) this.engine.set({ rpm: this.rpm, load: this.load, ign: this.ign, starter: this.crankT > 0 });
     }
+    motion() { return { speed: this.speed, wheelSpeed: this.burnout ? Math.max(this.speed, this.rpm / this.spec.limit * this.roadKph / 3.6) : this.speed, load: this.load || 0, rpm: this.rpm, intensity: this.rpm / this.spec.limit, burnout: this.burnout }; }
   }
 
   window.VelonixAudio = { PROFILES, ENGINES, CORES, create, Sim };
