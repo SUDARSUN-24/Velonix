@@ -17,13 +17,23 @@
       if (/[?&]showroom(=|&|$)/.test(location.search)) document.documentElement.classList.add('showroom');
     }());
   </script>
-  <title>Velonix - 3D Interactive Car Configurator</title>
-    <meta name="description" content="Custom car configurator built with Three.js for my university project.">
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" type="image/png">
+  <title>Velonix Lab | 3D Vehicle Configurator</title>
+  <meta name="description" content="Build your Velonix in a live 3D configurator: paint, wheels, aero, lighting, cabin and power core, with live pricing and a sound check.">
+  <meta name="theme-color" content="#060607">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Velonix Customs">
+  <meta property="og:title" content="Velonix Lab | 3D Vehicle Configurator">
+  <meta property="og:description" content="Build your Velonix in a live 3D configurator, then share a link to the exact build.">
+  <meta property="og:image" content="https://velonixsun.vercel.app/screenshots/configurator.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600;700&display=swap');
 
     :root {
       --neon-color: #bc13fe;
@@ -723,7 +733,22 @@
   </div>
 
   <script src="engine-audio.js"></script>
-  <script type="module">
+  <script>
+    // Shows the error panel. three.js comes from a CDN: if it can't be fetched the module below never runs,
+    // so its onerror lands here too instead of leaving the loader up forever.
+    function velonixFail(message) {
+      var err = document.getElementById('err'), box = document.createElement('div'), h = document.createElement('h3'), p = document.createElement('p');
+      h.textContent = '3D studio unavailable';
+      h.style.cssText = 'color:#bc13fe;margin-bottom:8px';
+      p.textContent = message || 'The 3D engine could not be downloaded. Check your connection and reload the page.';
+      box.append(h, p);
+      err.replaceChildren(box);
+      err.style.display = 'flex';
+      document.getElementById('loader').classList.add('hide');
+      if (document.documentElement.classList.contains('showroom')) parent.postMessage({ velonix: 'error' }, location.origin);
+    }
+  </script>
+  <script type="module" onerror="velonixFail()">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -4307,10 +4332,7 @@
             setTimeout(() => $('loader').classList.add('hide'), 380);
         } catch (err) {
             console.error(err);
-            if (SHOWROOM) parent.postMessage({ velonix: 'error' }, location.origin);
-            $('err').style.display = 'flex';
-            $('err').innerHTML = `<div><h3 style="color:#bc13fe;margin-bottom:8px">3D studio unavailable</h3><p>${err.message}</p></div>`;
-            $('loader').classList.add('hide');
+            velonixFail(err.message);
         }
         $('panelBody').addEventListener('pointermove', e => {
             const card = e.target.closest('.card'); if (!card) return;

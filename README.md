@@ -108,7 +108,9 @@ velonix-car-configurator/
 │── site.css          # Home page styles
 │── site.js           # Home page logic: drives the embedded 3D studio and the Engine Room
 │── engine-audio.js   # Engine sound synth (AudioWorklet) and rev model, shared by Home and the Lab
-│── customcar1.png    # Poster shown if WebGL is unavailable
+│── customcar1.webp   # Poster shown if WebGL is unavailable (.jpg fallback)
+│── favicon.svg       # Site icon
+│── tests/            # Engine audio tests (node tests/engine-audio.test.cjs)
 └── screenshots/      # README screenshots
 ```
 
