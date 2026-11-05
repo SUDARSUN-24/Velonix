@@ -13,13 +13,14 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  // Kept here too so the page (and the Engine Room) works before or without the 3D studio
+  // Kept here too so the page (and the Engine Room) works before or without the 3D studio.
+  // Stats are the Lab's standard spec (carModels + perf() in lab.js); keep them in step if those change.
   const MODELS = {
-    spectre:  { name: 'Velonix Spectre',    short: 'Spectre',  type: 'car' },
-    vortex:   { name: 'Apex Vortex',        short: 'Vortex',   type: 'car' },
-    behemoth: { name: 'Cyberdyne Behemoth', short: 'Behemoth', type: 'car' },
-    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck' },
-    titan:    { name: 'Titan Edge Bike',    short: 'Titan',    type: 'bike' }
+    spectre:  { name: 'Velonix Spectre',    short: 'Spectre',  type: 'car',   eyebrow: 'Grand Touring Coupé', price: 85000,  hp: 510, zero: 3.9, top: 290 },
+    vortex:   { name: 'Apex Vortex',        short: 'Vortex',   type: 'car',   eyebrow: 'Mid-Engine Hypercar', price: 250000, hp: 820, zero: 2.6, top: 340 },
+    behemoth: { name: 'Cyberdyne Behemoth', short: 'Behemoth', type: 'car',   eyebrow: 'Performance SUV',     price: 110000, hp: 625, zero: 4.1, top: 250 },
+    hauler:   { name: 'Cyber Hauler',       short: 'Hauler',   type: 'truck', eyebrow: 'Long-Haul Tractor',   price: 150000, hp: 650, zero: 0,   top: 120 },
+    titan:    { name: 'Titan Edge Bike',    short: 'Titan',    type: 'bike',  eyebrow: 'Superbike',           price: 45000,  hp: 210, zero: 3.1, top: 303 }
   };
   const ORDER = Object.keys(MODELS);
 
@@ -169,8 +170,10 @@
 
   /* ---------- hero HUD + model rail ---------- */
   function updateHud(first) {
-    if (V) {
-      const m = V.state.model, p = V.perf();
+    // Without the studio (still loading, or no WebGL) fall back to the standard-spec stats above.
+    // The very first call skips this: the markup already shows the Spectre.
+    if (V || !first) {
+      const m = V ? V.state.model : MODELS[modelId], p = V ? V.perf() : m;
       const nameEl = $('[data-hud="name"]');
       if (first) nameEl.textContent = m.name; else decode(nameEl, m.name);
       decode($('[data-hud="eyebrow"]'), m.eyebrow);
