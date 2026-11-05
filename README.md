@@ -104,7 +104,9 @@ The theme choice is shared between the home page and the configurator.
 ```
 velonix-car-configurator/
 │── index.html        # Home: live 3D showroom, About, Engine Room, Lab intro
-│── customize.html    # 3D configurator lab (self-contained; ?showroom=1 = canvas-only mode used by Home)
+│── customize.html    # 3D configurator lab page (?showroom=1 = canvas-only mode used by Home)
+│── lab.css           # Lab styles
+│── lab.js            # Lab logic: Three.js scene, options, pricing, garage, sound check (ES module)
 │── site.css          # Home page styles
 │── site.js           # Home page logic: drives the embedded 3D studio and the Engine Room
 │── engine-audio.js   # Engine sound synth (AudioWorklet) and rev model, shared by Home and the Lab
