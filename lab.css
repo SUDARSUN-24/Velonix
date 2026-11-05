@@ -147,7 +147,7 @@ header {
 .group { padding:18px 0 6px; border-bottom:1px solid #1b1b21; }
 .group:last-child { border-bottom:none; }
 .group-title { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:10px; }
-.group-title h4 { font-size:.82rem; letter-spacing:2px; text-transform:uppercase; color:#cfcfd8; }
+.group-title h3 { font-size:.82rem; letter-spacing:2px; text-transform:uppercase; color:#cfcfd8; }
 .group-title span { color: var(--text-dim); font-size:.9rem; text-align:right; }
 .group-sub { color:#d9d9e2; font-size:1rem; font-weight:600; margin:-6px 0 12px; }
 .group-sub em { color:var(--text-dim); font-style:normal; font-weight:500; margin-left:6px; }
@@ -265,7 +265,7 @@ html[data-theme="light"] .tab { color:#6b6880; }
 html[data-theme="light"] .tab:hover, html[data-theme="light"] .tab.on { color:#1d1630; }
 html[data-theme="light"] .panel-body::-webkit-scrollbar-thumb { background:#cfcbd9; }
 html[data-theme="light"] .group, html[data-theme="light"] .summary-list li { border-color:#e6e3ef; }
-html[data-theme="light"] .group-title h4 { color:#3a3352; }
+html[data-theme="light"] .group-title h3 { color:#3a3352; }
 html[data-theme="light"] .group-sub, html[data-theme="light"] .custom-color label { color:#2a2440; }
 html[data-theme="light"] .swatch { outline-color:#cfcbd9; }
 html[data-theme="light"] .card, html[data-theme="light"] .chip { border-color:#dcd8e8; }
@@ -397,7 +397,7 @@ html[data-theme="light"] .progress-fill::after { display:none; }
 .tabs { display:grid; grid-template-columns:repeat(4, 1fr); overflow:visible; }
 .tab { padding:10px 4px 9px; font-size:.72rem; letter-spacing:.8px; position:relative; }
 .tab .dot { position:absolute; top:8px; left:calc(50% + 10px); width:6px; height:6px; border-radius:50%; background:var(--neon-color); box-shadow:0 0 6px var(--neon-color); }
-.tab .no { position:absolute; top:6px; left:8px; font:600 .58rem 'Orbitron', sans-serif; color:#55555f; letter-spacing:0; }
+.tab .no { position:absolute; top:6px; left:8px; font:600 .58rem 'Orbitron', sans-serif; color:#80808c; letter-spacing:0; }
 .tab.on .no { color:var(--neon-color); }
 
 .steps { display:flex; justify-content:space-between; gap:10px; margin-top:20px; }
@@ -421,7 +421,7 @@ html[data-theme="light"] .progress-fill::after { display:none; }
 .look .art::after { content:""; position:absolute; inset:0; background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35) 45%, transparent 60%); transform:translateX(-100%); transition:transform .6s; }
 .look:hover .art::after { transform:translateX(100%); }
 .look .nm { font-weight:700; font-size:.95rem; }
-.look .ds { font-size:.76rem; color:#77778a; line-height:1.15; }
+.look .ds { font-size:.76rem; color:#858598; line-height:1.15; }
 .wide-btn {
   width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:11px; margin:2px 0 10px; border-radius:6px; cursor:pointer;
   border:1px dashed #3a3a44; background:transparent; font-weight:700; letter-spacing:.5px; transition:.2s;
@@ -524,8 +524,8 @@ html[data-theme="light"] .icon-btn, html[data-theme="light"] .step-btn, html[dat
 html[data-theme="light"] .act-btn, html[data-theme="light"] .build, html[data-theme="light"] .save-row input { border-color:#dcd8e8; color:#2a2440; }
 html[data-theme="light"] .icon-btn:hover:not(:disabled) { color:var(--neon-color); }
 html[data-theme="light"] .step-btn.next { background:rgba(138,18,196,.07); border-color:rgba(138,18,196,.5); }
-html[data-theme="light"] .tab .no { color:#b0abc4; }
-html[data-theme="light"] .look .ds { color:#7a7690; }
+html[data-theme="light"] .tab .no { color:#706a86; }
+html[data-theme="light"] .look .ds { color:#6e6a84; }
 html[data-theme="light"] .wide-btn { border-color:#cfcbd9; color:#2a2440; }
 html[data-theme="light"] .custom-color input[type=color], html[data-theme="light"] .custom-color .hex, html[data-theme="light"] .finish-seg button { background:#fff; border-color:#dcd8e8; color:#2a2440; }
 html[data-theme="light"] .finish-seg button.on { background:rgba(138,18,196,.08); border-color:var(--neon-color); }

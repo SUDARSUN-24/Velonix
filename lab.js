@@ -2822,11 +2822,11 @@ function renderPanel() {
     const type = state.model.type;
     if (hover) previewOff();
     if (state.tab === 'model') {
-        body.innerHTML = `<div class="group"><div class="group-title"><h4>Select Model</h4><span>${carModels.length} available</span></div>
+        body.innerHTML = `<div class="group"><div class="group-title"><h3>Select Model</h3><span>${carModels.length} available</span></div>
           <div class="cards wide">${carModels.map(m => `<div class="card ${m.id === state.model.id ? 'on' : ''}" data-model="${m.id}">
             <i class="fas ${m.icon}"></i><div class="txt"><span class="nm">${m.name}</span><span class="ds">${m.eyebrow} · ${m.tagline}</span></div>
             <span class="pr">${fmt(m.price)}</span></div>`).join('')}</div></div>
-          <div class="group"><div class="group-title"><h4>Signature Looks</h4><span>One click, whole car</span></div>
+          <div class="group"><div class="group-title"><h3>Signature Looks</h3><span>One click, whole car</span></div>
           <div class="looks">${LOOKS.map(l => `<button class="look" type="button" data-look="${l.id}"><span class="art" style="background:${l.art}"></span><span class="nm">${l.name}</span><span class="ds">${l.desc}</span></button>`).join('')}</div>
           <button class="wide-btn" type="button" data-act="surprise"><i class="fas fa-dice"></i> Surprise me</button></div>` + stepNav();
         body.querySelectorAll('[data-model]').forEach(el => el.onclick = () => {
@@ -2845,7 +2845,7 @@ function renderPanel() {
     for (const g of groupsFor(state.tab)) {
         const cs = choicesFor(g), cur = cs.find(c => c.id === state.sel[g.id]) || cs[0];
         const curName = g.id === 'engine' ? cur.names[type] : cur.name;
-        html += `<div class="group"><div class="group-title"><h4>${g.title}</h4><span>${priceLabel(cur.price)}</span></div>`;
+        html += `<div class="group"><div class="group-title"><h3>${g.title}</h3><span>${priceLabel(cur.price)}</span></div>`;
         if (g.style === 'paint') {
             html += `<div class="group-sub" data-sub="${g.id}">${cur.custom ? 'Individual · ' + FINISHES[state.custom.finish].label : curName}<em>${cur.custom ? state.custom.hex.toUpperCase() : FINISHES[cur.finish].label}</em></div>`;
             for (const fin of ['solid', 'metallic', 'matte', 'chrome', 'iridescent']) {
@@ -2876,7 +2876,7 @@ function renderPanel() {
         html += '</div>';
     }
     if (state.tab === 'lights') {
-        html += `<div class="group"><div class="group-title"><h4>Light Preview</h4><span>Not priced</span></div><div class="chips">` +
+        html += `<div class="group"><div class="group-title"><h3>Light Preview</h3><span>Not priced</span></div><div class="chips">` +
             [['off', 'Off'], ['drl', 'Daytime'], ['on', 'Full Beam']].map(([id, n]) => `<div class="chip ${state.lights === id ? 'on' : ''}" data-light="${id}">${n}</div>`).join('') + '</div></div>';
     }
     if (state.tab === 'power') html += labEngine.html();
@@ -3343,14 +3343,14 @@ function buildCard(b) {
 }
 function summaryPanel() {
     const list = garage.list();
-    return `<div class="group"><div class="group-title"><h4>Specification</h4><span>${state.model.name}</span></div>${summaryHTML()}</div>
-      <div class="group"><div class="group-title"><h4>Share</h4><span>Send it to a friend</span></div>
+    return `<div class="group"><div class="group-title"><h3>Specification</h3><span>${state.model.name}</span></div>${summaryHTML()}</div>
+      <div class="group"><div class="group-title"><h3>Share</h3><span>Send it to a friend</span></div>
         <div class="share-row">
           <button class="act-btn" type="button" data-act="link"><i class="fas fa-link"></i>Copy link</button>
           <button class="act-btn" type="button" data-act="image"><i class="fas fa-camera"></i>Save image</button>
           <button class="act-btn" type="button" data-act="surprise"><i class="fas fa-dice"></i>Surprise me</button>
         </div></div>
-      <div class="group"><div class="group-title"><h4>My Garage</h4><span>${list.length ? `${list.length} of ${GARAGE_MAX} saved` : 'Saved on this device'}</span></div>
+      <div class="group"><div class="group-title"><h3>My Garage</h3><span>${list.length ? `${list.length} of ${GARAGE_MAX} saved` : 'Saved on this device'}</span></div>
         <div class="save-row"><input id="buildName" maxlength="40" placeholder="${esc(defaultName())}" aria-label="Build name"><button class="act-btn" type="button" data-act="save"><i class="fas fa-floppy-disk"></i>Save</button></div>
         <div class="garage">${list.length ? list.map(buildCard).join('') : '<p class="empty">No saved builds yet. Save this one and it will be waiting here next time.</p>'}</div></div>`;
 }
@@ -3457,7 +3457,7 @@ const labEngine = (() => {
     }
     function html() {
         const s = specFor();
-        return `<div class="group"><div class="group-title"><h4>Sound Check</h4><span id="scName">${s.label}</span></div>
+        return `<div class="group"><div class="group-title"><h3>Sound Check</h3><span id="scName">${s.label}</span></div>
           <div class="sound-check" id="soundCheck">
             <div class="sc-top"><div><b class="sc-rpm" id="scRpm">${(Math.round(sim.rpm / 10) * 10).toLocaleString('en-US')}</b><small>rpm</small></div><span class="sc-state" id="scState">Engine off</span></div>
             <div class="sc-speed"><b id="scSpeed">${Math.round(sim.speed * 3.6).toLocaleString('en-US')}</b><small>km/h</small><span>NO LIMITS</span></div>

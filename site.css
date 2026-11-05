@@ -2,6 +2,7 @@
 :root {
   --neon: #bc13fe;
   --neon-2: #d04bff;
+  --neon-text: #d04bff;  /* small purple text: passes 4.5:1 contrast */
   --neon-glow: rgba(188, 19, 254, .45);
   --bg: #050506;
   --text: #f4f4f6;
@@ -18,6 +19,7 @@
 html[data-theme="light"] {
   --neon: #8a12c4;
   --neon-2: #a321e0;
+  --neon-text: #8a12c4;
   --neon-glow: rgba(138, 18, 196, .28);
   --bg: #eceaf2;
   --text: #17142a;
@@ -320,14 +322,14 @@ html[data-theme="light"] .engine { --amber: #d98200; --red: #d81b45; --ok: #0f9d
 .footer-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px; }
 .footer-grid p { margin-top: 10px; max-width: 380px; color: var(--dim); }
 .maker { display: grid; gap: 4px; justify-items: start; }
-.maker .eyebrow { color: var(--neon); font-size: .7rem; letter-spacing: .24em; text-transform: uppercase; }
+.maker .eyebrow { color: var(--neon-text); font-size: .7rem; letter-spacing: .24em; text-transform: uppercase; }
 .maker b { font: 800 1.35rem 'Orbitron', sans-serif; letter-spacing: .04em; margin-top: 4px; }
 .maker span { color: var(--dim); }
 .maker .contact-link { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; padding: 9px 16px; border: 1px solid var(--line-2); border-radius: 999px; font-weight: 600; transition: border-color .25s, color .25s, box-shadow .25s; }
 .maker .contact-link i { color: var(--neon); font-size: 1.1rem; }
 .maker .contact-link:hover { border-color: var(--neon); box-shadow: 0 0 18px var(--neon-glow); }
 .footer-bottom { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--dim); font-size: .95rem; }
-.text-link { color: var(--neon); font-weight: 600; }
+.text-link { color: var(--neon-text); font-weight: 600; }
 
 /* ---------- INTRO (after boot) ---------- */
 .split-text .char { display: inline-block; opacity: 0; transform: translateY(.5em) rotateX(-70deg); filter: blur(8px); }
