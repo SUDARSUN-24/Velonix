@@ -26,8 +26,8 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - HTML5
 - CSS3
 - JavaScript (ES6)
-- Three.js (3D Rendering)
-- Lenis (smooth scrolling)
+- Three.js r160 (3D Rendering, self-hosted in `lib/`)
+- Lenis 1.1.13 (smooth scrolling, self-hosted in `lib/`)
 - Font Awesome (Icons)
 
 ---
@@ -104,14 +104,32 @@ The theme choice is shared between the home page and the configurator.
 ```
 velonix-car-configurator/
 │── index.html        # Home: live 3D showroom, About, Engine Room, Lab intro
-│── customize.html    # 3D configurator lab (self-contained; ?showroom=1 = canvas-only mode used by Home)
+│── customize.html    # 3D configurator lab page (?showroom=1 = canvas-only mode used by Home)
+│── lab.css           # Lab styles
+│── lab.js            # Lab logic: Three.js scene, options, pricing, garage, sound check (ES module)
 │── site.css          # Home page styles
 │── site.js           # Home page logic: drives the embedded 3D studio and the Engine Room
 │── engine-audio.js   # Engine sound synth (AudioWorklet) and rev model, shared by Home and the Lab
-│── customcar1.png    # Poster shown if WebGL is unavailable
+│── customcar1.webp   # Poster shown if WebGL is unavailable (.jpg fallback)
+│── favicon.svg       # Site icon
+│── lib/              # Self-hosted Three.js (core + the add-ons the Lab uses) and Lenis, with their licences
+│── tests/            # Engine audio tests + browser smoke tests (see Testing)
 └── screenshots/      # README screenshots
 ```
 
+
+---
+
+## 🧪 Testing
+
+```bash
+npm ci --prefix tests                                   # one-off: installs puppeteer-core
+node --test tests/engine-audio.test.cjs tests/browser.test.cjs
+```
+
+- **Engine audio:** renders every engine offline and checks the rev model.
+- **Browser smoke tests:** start Home and the Lab in headless Chrome or Edge. They check that the 3D studio boots, that shared links open the right vehicle, that the Lab shows an error instead of hanging when Three.js can't load, and that Home still works without WebGL. Set `CHROME_PATH` to choose the browser; the tests are skipped if none is found.
+- GitHub Actions runs both on every push to `main` and on every pull request.
 
 ---
 
