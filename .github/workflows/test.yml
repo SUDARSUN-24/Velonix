@@ -1,0 +1,23 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - run: npm ci --prefix tests
+      - name: Engine audio and browser smoke tests
+        run: node --test tests/engine-audio.test.cjs tests/browser.test.cjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

@@ -113,10 +113,23 @@ velonix-car-configurator/
 │── customcar1.webp   # Poster shown if WebGL is unavailable (.jpg fallback)
 │── favicon.svg       # Site icon
 │── lib/              # Self-hosted Three.js (core + the add-ons the Lab uses) and Lenis, with their licences
-│── tests/            # Engine audio tests (node tests/engine-audio.test.cjs)
+│── tests/            # Engine audio tests + browser smoke tests (see Testing)
 └── screenshots/      # README screenshots
 ```
 
+
+---
+
+## 🧪 Testing
+
+```bash
+npm ci --prefix tests                                   # one-off: installs puppeteer-core
+node --test tests/engine-audio.test.cjs tests/browser.test.cjs
+```
+
+- **Engine audio:** renders every engine offline and checks the rev model.
+- **Browser smoke tests:** start Home and the Lab in headless Chrome or Edge. They check that the 3D studio boots, that shared links open the right vehicle, that the Lab shows an error instead of hanging when Three.js can't load, and that Home still works without WebGL. Set `CHROME_PATH` to choose the browser; the tests are skipped if none is found.
+- GitHub Actions runs both on every push to `main` and on every pull request.
 
 ---
 

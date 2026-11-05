@@ -1,0 +1,11 @@
+{
+  "name": "velonix-tests",
+  "private": true,
+  "description": "Test tooling only. Kept in tests/ so the site root stays a plain static site for Vercel.",
+  "scripts": {
+    "test": "node --test engine-audio.test.cjs browser.test.cjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}
