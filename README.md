@@ -26,8 +26,8 @@ This project demonstrates front-end development, UI/UX design, and 3D rendering 
 - HTML5
 - CSS3
 - JavaScript (ES6)
-- Three.js (3D Rendering)
-- Lenis (smooth scrolling)
+- Three.js r160 (3D Rendering, self-hosted in `lib/`)
+- Lenis 1.1.13 (smooth scrolling, self-hosted in `lib/`)
 - Font Awesome (Icons)
 
 ---
@@ -112,6 +112,7 @@ velonix-car-configurator/
 │── engine-audio.js   # Engine sound synth (AudioWorklet) and rev model, shared by Home and the Lab
 │── customcar1.webp   # Poster shown if WebGL is unavailable (.jpg fallback)
 │── favicon.svg       # Site icon
+│── lib/              # Self-hosted Three.js (core + the add-ons the Lab uses) and Lenis, with their licences
 │── tests/            # Engine audio tests (node tests/engine-audio.test.cjs)
 └── screenshots/      # README screenshots
 ```
